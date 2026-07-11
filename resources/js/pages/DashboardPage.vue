@@ -93,16 +93,34 @@
           <div v-else-if="recentActivity.activities.length === 0" class="text-center py-4 text-gray-500 dark:text-gray-400">
             No recent activity.
           </div>
-          <div v-else v-for="activity in recentActivity.activities" :key="activity.game_id" class="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
-            <div class="w-10 h-10 rounded-lg" :class="'bg-gradient-to-br ' + activity.gradient" flex items-center justify-center>
-              <span class="text-white font-bold">{{ activity.abbreviation }}</span>
+          <router-link
+            v-else v-for="activity in recentActivity.activities"
+            :key="activity.game_id"
+            :to="`/game/${activity.game_id}`"
+            class="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-smooth cursor-pointer"
+          >
+            <div class="w-10 h-10 rounded-lg overflow-hidden" :class="'bg-gradient-to-br ' + activity.gradient">
+              <img
+                v-if="activity.icon_url"
+                :src="activity.icon_url"
+                :alt="activity.game_name"
+                class="w-full h-full object-cover"
+                @error="activity.iconError = true"
+                v-show="!activity.iconError"
+              />
+              <div
+                class="w-full h-full flex items-center justify-center text-white font-bold"
+                :class="{ 'hidden': activity.icon_url && !activity.iconError }"
+              >
+                {{ activity.abbreviation }}
+              </div>
             </div>
             <div class="flex-1">
               <h4 class="font-medium text-gray-900 dark:text-white">{{ activity.game_name }}</h4>
               <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('dashboard.recentActivity.playedOn') }} {{ activity.platform }} • {{ activity.time_ago }}</p>
             </div>
             <span class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ activity.duration_hours }}h</span>
-          </div>
+          </router-link>
         </div>
       </div>
     </div>
@@ -136,7 +154,20 @@
            <tr v-else v-for="game in topGames.games" :key="game.game_id" class="border-b border-steam/50 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-smooth">
              <td class="py-4 px-4">
                <div class="flex items-center gap-3">
-                 <div class="w-10 h-10 rounded-lg" :class="'bg-gradient-to-br ' + game.gradient"></div>
+                 <div class="w-10 h-10 rounded-lg overflow-hidden" :class="'bg-gradient-to-br ' + game.gradient">
+                   <img
+                     v-if="game.icon_url"
+                     :src="game.icon_url"
+                     :alt="game.game_name"
+                     class="w-full h-full object-cover"
+                     @error="game.iconError = true"
+                     v-show="!game.iconError"
+                   />
+                   <div
+                     class="w-full h-full"
+                     :class="{ 'hidden': game.icon_url && !game.iconError }"
+                   ></div>
+                 </div>
                  <div>
                    <h4 class="font-medium text-gray-900 dark:text-white">{{ game.game_name }}</h4>
                    <!-- Удалена подпись издателя -->
@@ -194,8 +225,19 @@ const fetchDashboardData = async () => {
 
         stats.value = statsData
         platformDistribution.value = platformData
-        recentActivity.value = activityData
-        topGames.value = topGamesData
+        // Добавляем поле iconError для отслеживания ошибок загрузки изображений
+        const activities = activityData.activities || []
+        activities.forEach(activity => {
+          activity.iconError = false
+        })
+        recentActivity.value = { activities }
+        
+        // Добавляем поле iconError для top games
+        const topGamesList = topGamesData.games || []
+        topGamesList.forEach(game => {
+          game.iconError = false
+        })
+        topGames.value = { games: topGamesList }
     } catch (err) {
         console.error('Failed to fetch dashboard data:', err)
         error.value = err.message || 'Unknown error'

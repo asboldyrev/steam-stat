@@ -22,4 +22,24 @@ class Game extends Model
     {
         return $this->hasOne(GameStat::class)->latest('date');
     }
+
+    // TODO убрать дубль (SteamGameData)
+    public function iconUrlLarge(): ?string
+    {
+        if ($this->icon_url === null) {
+            return null;
+        }
+
+        return sprintf(
+            'https://media.steampowered.com/steamcommunity/public/images/apps/%d/%s.jpg',
+            $this->app_id,
+            $this->icon_url,
+        );
+    }
+
+    // TODO убрать дубль (SteamGameData)
+    public function getUrl(): string
+    {
+        return 'https://store.steampowered.com/app/' . $this->app_id;
+    }
 }

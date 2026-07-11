@@ -104,6 +104,7 @@ final class GameController extends Controller
                 'id' => $game->id,
                 'name' => $game->name,
                 'abbreviation' => $abbreviation,
+                'icon_url' => $game->iconUrlLarge(),
                 'gradient' => $gradient,
                 'total_time' => $totalHours . 'h',
                 'last_played' => $timeAgo,
@@ -133,6 +134,7 @@ final class GameController extends Controller
             'id' => $game->id,
             'name' => $game->name,
             'abbreviation' => $this->generateAbbreviation($game->name),
+            'icon_url' => $game->iconUrlLarge(),
             'total_playtime_hours' => $totalPlaytimeHours,
             'last_played' => $lastPlayed,
         ]);

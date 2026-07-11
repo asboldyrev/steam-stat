@@ -4,8 +4,21 @@
     <div class="flex items-start justify-between">
       <div class="flex items-center gap-6">
         <div v-if="loading.game" class="w-24 h-24 rounded-2xl bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
-        <div v-else class="w-24 h-24 rounded-2xl bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center">
-          <span class="text-white text-3xl font-bold">{{ game.abbreviation }}</span>
+        <div v-else class="w-24 h-24 rounded-2xl overflow-hidden bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center">
+          <img
+            v-if="game.icon_url"
+            :src="game.icon_url"
+            :alt="game.name"
+            class="w-full h-full object-cover"
+            @error="game.iconError = true"
+            v-show="!game.iconError"
+          />
+          <div
+            class="w-full h-full flex items-center justify-center text-white text-3xl font-bold"
+            :class="{ 'hidden': game.icon_url && !game.iconError }"
+          >
+            {{ game.abbreviation }}
+          </div>
         </div>
         <div>
           <h1 v-if="loading.game" class="text-4xl font-bold text-gray-900 dark:text-white animate-pulse bg-gray-200 dark:bg-gray-700 rounded h-10 w-64"></h1>
@@ -175,6 +188,8 @@ const fetchGameData = async () => {
             getGameRecentSessions(gameId)
         ])
 
+        // Добавляем поле iconError для отслеживания ошибок загрузки изображения
+        gameData.iconError = false
         game.value = gameData
         platformBreakdown.value = platformData
         playtimeHistory.value = historyData

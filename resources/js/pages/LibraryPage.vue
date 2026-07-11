@@ -83,15 +83,27 @@
     </div>
 
     <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-      <div
+      <router-link
         v-for="game in games"
         :key="game.id"
-        class="bg-white dark:bg-gray-800 rounded-2xl border border-steam shadow-card hover:shadow-hover transition-smooth overflow-hidden group cursor-pointer"
+        :to="`/game/${game.id}`"
+        class="bg-white dark:bg-gray-800 rounded-2xl border border-steam shadow-card hover:shadow-hover transition-smooth overflow-hidden group cursor-pointer block"
       >
         <div class="p-5">
           <div class="flex items-start justify-between mb-4">
-            <div class="w-12 h-12 rounded-xl" :class="game.gradient">
-              <div class="w-full h-full flex items-center justify-center text-white font-bold">
+            <div class="w-12 h-12 rounded-xl overflow-hidden" :class="game.gradient">
+              <img
+                v-if="game.icon_url"
+                :src="game.icon_url"
+                :alt="game.name"
+                class="w-full h-full object-cover"
+                @error="game.iconError = true"
+                v-show="!game.iconError"
+              />
+              <div
+                class="w-full h-full flex items-center justify-center text-white font-bold"
+                :class="{ 'hidden': game.icon_url && !game.iconError }"
+              >
                 {{ game.abbreviation }}
               </div>
             </div>
@@ -120,15 +132,8 @@
             </div>
           </div>
         </div>
-        <div class="px-5 py-4 bg-gray-50 dark:bg-gray-700/50 border-t border-steam">
-          <router-link
-            :to="`/game/${game.id}`"
-            class="w-full py-2.5 text-center bg-white dark:bg-gray-800 border border-steam rounded-xl text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-700 transition-smooth block text-gray-700 dark:text-gray-300"
-          >
-            {{ t('library.gameCard.viewDetails') }}
-          </router-link>
-        </div>
-      </div>
+        <!-- Убрана кнопка "View Details", так как вся карточка кликабельна -->
+      </router-link>
     </div>
 
     <!-- Пагинация удалена -->
@@ -162,7 +167,12 @@ const fetchGames = async () => {
         if (platformFilter.value && platformFilter.value !== 'all') params.platform = platformFilter.value
 
         const data = await getGames(params)
-        games.value = data.games || []
+        const gamesData = data.games || []
+        // Добавляем поле iconError для отслеживания ошибок загрузки изображений
+        gamesData.forEach(game => {
+          game.iconError = false
+        })
+        games.value = gamesData
     } catch (err) {
         console.error('Failed to fetch games:', err)
         error.value = err.message || 'Unknown error'
