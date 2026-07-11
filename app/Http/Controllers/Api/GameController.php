@@ -93,7 +93,9 @@ final class GameController extends Controller
         $games = [];
         foreach ($stats as $index => $stat) {
             $game = $stat->game;
+
             $abbreviation = $this->generateAbbreviation($game->name);
+
             $totalHours = (int) round($stat->total_minutes / 60);
             $timeAgo = $this->formatTimeAgo($stat->last_played_at);
             $gradient = $gradients[$index % count($gradients)];
@@ -284,22 +286,23 @@ final class GameController extends Controller
      */
     private function generateAbbreviation(string $name): string
     {
-        $words = preg_split('/\s+/', trim($name));
+        $words = preg_split('/\s+/u', trim($name));
         if (count($words) === 1) {
-            return strtoupper(substr($words[0], 0, 3));
+            return mb_strtoupper(mb_substr($words[0], 0, 3, 'UTF-8'), 'UTF-8');
         }
 
         $abbr = '';
         foreach ($words as $word) {
-            if (preg_match('/[A-Za-z]/', $word[0] ?? '')) {
-                $abbr .= strtoupper($word[0]);
+            $firstChar = mb_substr($word, 0, 1, 'UTF-8');
+            if ($firstChar !== '' && preg_match('/[A-Za-z]/u', $firstChar)) {
+                $abbr .= mb_strtoupper($firstChar, 'UTF-8');
             }
-            if (strlen($abbr) >= 3) {
+            if (mb_strlen($abbr, 'UTF-8') >= 3) {
                 break;
             }
         }
 
-        return strlen($abbr) > 0 ? $abbr : '???';
+        return mb_strlen($abbr, 'UTF-8') > 0 ? $abbr : '???';
     }
 
     /**

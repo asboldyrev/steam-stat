@@ -40,10 +40,19 @@
         </nav>
 
         <div class="mt-12 p-4 bg-gray-50 dark:bg-gray-800 rounded-2xl">
-          <p class="text-sm text-gray-600 dark:text-gray-300">{{ t('layout.lastSync', { time: '2 hours ago' }) }}</p>
-          <button class="mt-2 w-full py-2 bg-steam-gradient text-white rounded-xl text-sm font-medium hover:opacity-90 transition-smooth">
-            {{ t('layout.syncButton') }}
-          </button>
+          <div v-if="loading" class="flex items-center justify-between">
+            <p class="text-sm text-gray-600 dark:text-gray-300 animate-pulse bg-gray-300 dark:bg-gray-700 rounded h-4 w-32"></p>
+            <button disabled class="mt-2 w-full py-2 bg-gray-300 dark:bg-gray-700 text-gray-500 rounded-xl text-sm font-medium cursor-not-allowed">
+              {{ t('layout.syncButton') }}
+            </button>
+          </div>
+          <div v-else>
+            <p v-if="syncError" class="text-sm text-red-500 dark:text-red-400">{{ syncError }}</p>
+            <p v-else class="text-sm text-gray-600 dark:text-gray-300">{{ t('layout.lastSync', { time: lastSync || '...' }) }}</p>
+            <button @click="handleSync" class="mt-2 w-full py-2 bg-steam-gradient text-white rounded-xl text-sm font-medium hover:opacity-90 transition-smooth disabled:opacity-50 disabled:cursor-not-allowed" :disabled="loading">
+              {{ t('layout.syncButton') }}
+            </button>
+          </div>
         </div>
       </div>
     </aside>
@@ -91,16 +100,55 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useTheme } from '../../composables/useTheme.js'
 import { useLocale } from '../../composables/useLocale.js'
+import { useApi } from '../../composables/useApi.js'
 
 const { t } = useI18n()
 const route = useRoute()
 const { isDark, toggleTheme } = useTheme()
 const { locale, toggleLocale } = useLocale()
+const { getLastSync, triggerSync } = useApi()
+
+const lastSync = ref('')
+const loading = ref(false)
+const syncError = ref(null)
+
+const fetchLastSync = async () => {
+    loading.value = true
+    syncError.value = null
+    try {
+        const data = await getLastSync()
+        lastSync.value = data.last_sync
+    } catch (err) {
+        console.error('Failed to fetch last sync:', err)
+        syncError.value = err.message || 'Unknown error'
+    } finally {
+        loading.value = false
+    }
+}
+
+const handleSync = async () => {
+    loading.value = true
+    syncError.value = null
+    try {
+        await triggerSync()
+        // После успешного запуска синхронизации обновляем время
+        await fetchLastSync()
+    } catch (err) {
+        console.error('Failed to trigger sync:', err)
+        syncError.value = err.message || 'Unknown error'
+    } finally {
+        loading.value = false
+    }
+}
+
+onMounted(() => {
+    fetchLastSync()
+})
 
 const currentPageTitle = computed(() => {
   const path = route.path

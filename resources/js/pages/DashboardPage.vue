@@ -6,7 +6,7 @@
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('dashboard.stats.totalPlaytime') }}</p>
-            <h3 class="text-3xl font-bold text-gray-900 dark:text-white mt-2">1,247h</h3>
+            <h3 class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ loading.stats ? '...' : stats.total_playtime_hours }}h</h3>
             <!-- Удален тренд +12% -->
           </div>
           <div class="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
@@ -21,7 +21,7 @@
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('dashboard.stats.gamesPlayed') }}</p>
-            <h3 class="text-3xl font-bold text-gray-900 dark:text-white mt-2">87</h3>
+            <h3 class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ loading.stats ? '...' : stats.games_count }}</h3>
             <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ t('dashboard.stats.acrossAllPlatforms') }}</p>
           </div>
           <div class="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
@@ -36,8 +36,8 @@
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('dashboard.stats.steamDeck') }}</p>
-            <h3 class="text-3xl font-bold text-gray-900 dark:text-white mt-2">312h</h3>
-            <p class="text-sm text-green-600 dark:text-green-400 mt-1">25% {{ t('dashboard.stats.ofTotalTime') }}</p>
+            <h3 class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ loading.stats ? '...' : stats.steam_deck_hours }}h</h3>
+            <p class="text-sm text-green-600 dark:text-green-400 mt-1">{{ stats.steam_deck_percentage }}% {{ t('dashboard.stats.ofTotalTime') }}</p>
           </div>
           <div class="w-12 h-12 rounded-xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
             <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -57,63 +57,21 @@
           <!-- Удален select timeRange -->
         </div>
         <div class="space-y-4">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-3">
-              <div class="w-3 h-3 rounded-full bg-blue-500"></div>
-              <span class="text-gray-700 dark:text-gray-300">{{ t('dashboard.platformDistribution.windows') }}</span>
-            </div>
-            <div class="flex items-center gap-4">
-              <span class="font-medium text-gray-700 dark:text-gray-300">512h (41%)</span>
-              <div class="w-48 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                <div class="h-full bg-blue-500 rounded-full" style="width: 41%"></div>
-              </div>
-            </div>
+          <div v-if="loading.platform" class="text-center py-4 text-gray-500 dark:text-gray-400">
+            Loading platform distribution...
           </div>
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-3">
-              <div class="w-3 h-3 rounded-full bg-green-500"></div>
-              <span class="text-gray-700 dark:text-gray-300">{{ t('dashboard.platformDistribution.steamDeck') }}</span>
-            </div>
-            <div class="flex items-center gap-4">
-              <span class="font-medium text-gray-700 dark:text-gray-300">312h (25%)</span>
-              <div class="w-48 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                <div class="h-full bg-green-500 rounded-full" style="width: 25%"></div>
-              </div>
-            </div>
+          <div v-else-if="platformDistribution.platforms.length === 0" class="text-center py-4 text-gray-500 dark:text-gray-400">
+            No platform data available.
           </div>
-          <div class="flex items-center justify-between">
+          <div v-else v-for="platform in platformDistribution.platforms" :key="platform.name" class="flex items-center justify-between">
             <div class="flex items-center gap-3">
-              <div class="w-3 h-3 rounded-full bg-purple-500"></div>
-              <span class="text-gray-700 dark:text-gray-300">{{ t('dashboard.platformDistribution.linux') }}</span>
+              <div class="w-3 h-3 rounded-full" :class="platform.color"></div>
+              <span class="text-gray-700 dark:text-gray-300">{{ platform.name }}</span>
             </div>
             <div class="flex items-center gap-4">
-              <span class="font-medium text-gray-700 dark:text-gray-300">248h (20%)</span>
+              <span class="font-medium text-gray-700 dark:text-gray-300">{{ platform.hours }}h ({{ platform.percentage }}%)</span>
               <div class="w-48 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                <div class="h-full bg-purple-500 rounded-full" style="width: 20%"></div>
-              </div>
-            </div>
-          </div>
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-3">
-              <div class="w-3 h-3 rounded-full bg-orange-500"></div>
-              <span class="text-gray-700 dark:text-gray-300">{{ t('dashboard.platformDistribution.macOS') }}</span>
-            </div>
-            <div class="flex items-center gap-4">
-              <span class="font-medium text-gray-700 dark:text-gray-300">98h (8%)</span>
-              <div class="w-48 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                <div class="h-full bg-orange-500 rounded-full" style="width: 8%"></div>
-              </div>
-            </div>
-          </div>
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-3">
-              <div class="w-3 h-3 rounded-full bg-gray-500"></div>
-              <span class="text-gray-700 dark:text-gray-300">{{ t('dashboard.platformDistribution.offline') }}</span>
-            </div>
-            <div class="flex items-center gap-4">
-              <span class="font-medium text-gray-700 dark:text-gray-300">77h (6%)</span>
-              <div class="w-48 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                <div class="h-full bg-gray-500 rounded-full" style="width: 6%"></div>
+                <div class="h-full rounded-full" :class="platform.color" :style="{ width: platform.percentage + '%' }"></div>
               </div>
             </div>
           </div>
@@ -129,35 +87,21 @@
           </button>
         </div>
         <div class="space-y-4">
-          <div class="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
-            <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center">
-              <span class="text-white font-bold">CS2</span>
-            </div>
-            <div class="flex-1">
-              <h4 class="font-medium text-gray-900 dark:text-white">Counter-Strike 2</h4>
-              <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('dashboard.recentActivity.playedOn') }} Windows • Today</p>
-            </div>
-            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">4h</span>
+          <div v-if="loading.activity" class="text-center py-4 text-gray-500 dark:text-gray-400">
+            Loading recent activity...
           </div>
-          <div class="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
-            <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-green-500 to-emerald-400 flex items-center justify-center">
-              <span class="text-white font-bold">ELD</span>
-            </div>
-            <div class="flex-1">
-              <h4 class="font-medium text-gray-900 dark:text-white">Elden Ring</h4>
-              <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('dashboard.recentActivity.playedOn') }} Steam Deck • Yesterday</p>
-            </div>
-            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">6h</span>
+          <div v-else-if="recentActivity.activities.length === 0" class="text-center py-4 text-gray-500 dark:text-gray-400">
+            No recent activity.
           </div>
-          <div class="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
-            <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-pink-400 flex items-center justify-center">
-              <span class="text-white font-bold">BG3</span>
+          <div v-else v-for="activity in recentActivity.activities" :key="activity.game_id" class="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+            <div class="w-10 h-10 rounded-lg" :class="'bg-gradient-to-br ' + activity.gradient" flex items-center justify-center>
+              <span class="text-white font-bold">{{ activity.abbreviation }}</span>
             </div>
             <div class="flex-1">
-              <h4 class="font-medium text-gray-900 dark:text-white">Baldur's Gate 3</h4>
-              <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('dashboard.recentActivity.playedOn') }} Linux • 2 days ago</p>
+              <h4 class="font-medium text-gray-900 dark:text-white">{{ activity.game_name }}</h4>
+              <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('dashboard.recentActivity.playedOn') }} {{ activity.platform }} • {{ activity.time_ago }}</p>
             </div>
-            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">3h</span>
+            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ activity.duration_hours }}h</span>
           </div>
         </div>
       </div>
@@ -179,44 +123,28 @@
            </tr>
          </thead>
          <tbody>
-           <tr class="border-b border-steam/50 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-smooth">
-             <td class="py-4 px-4">
-               <div class="flex items-center gap-3">
-                 <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-600 to-blue-400"></div>
-                 <div>
-                   <h4 class="font-medium text-gray-900 dark:text-white">Counter-Strike 2</h4>
-                   <!-- Удалена подпись издателя -->
-                 </div>
-               </div>
+           <tr v-if="loading.topGames" class="border-b border-steam/50">
+             <td colspan="3" class="py-8 text-center text-gray-500 dark:text-gray-400">
+               Loading top games...
              </td>
-             <td class="py-4 px-4 font-medium text-gray-700 dark:text-gray-300">248h</td>
-             <td class="py-4 px-4 text-gray-500 dark:text-gray-400">Today</td>
            </tr>
-           <tr class="border-b border-steam/50 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-smooth">
-             <td class="py-4 px-4">
-               <div class="flex items-center gap-3">
-                 <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-green-600 to-emerald-400"></div>
-                 <div>
-                   <h4 class="font-medium text-gray-900 dark:text-white">Elden Ring</h4>
-                   <!-- Удалена подпись издателя -->
-                 </div>
-               </div>
+           <tr v-else-if="topGames.games.length === 0" class="border-b border-steam/50">
+             <td colspan="3" class="py-8 text-center text-gray-500 dark:text-gray-400">
+               No top games data.
              </td>
-             <td class="py-4 px-4 font-medium text-gray-700 dark:text-gray-300">186h</td>
-             <td class="py-4 px-4 text-gray-500 dark:text-gray-400">Yesterday</td>
            </tr>
-           <tr class="border-b border-steam/50 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-smooth">
+           <tr v-else v-for="game in topGames.games" :key="game.game_id" class="border-b border-steam/50 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-smooth">
              <td class="py-4 px-4">
                <div class="flex items-center gap-3">
-                 <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-600 to-pink-400"></div>
+                 <div class="w-10 h-10 rounded-lg" :class="'bg-gradient-to-br ' + game.gradient"></div>
                  <div>
-                   <h4 class="font-medium text-gray-900 dark:text-white">Baldur's Gate 3</h4>
+                   <h4 class="font-medium text-gray-900 dark:text-white">{{ game.game_name }}</h4>
                    <!-- Удалена подпись издателя -->
                  </div>
                </div>
              </td>
-             <td class="py-4 px-4 font-medium text-gray-700 dark:text-gray-300">142h</td>
-             <td class="py-4 px-4 text-gray-500 dark:text-gray-400">3 days ago</td>
+             <td class="py-4 px-4 font-medium text-gray-700 dark:text-gray-300">{{ game.total_time }}</td>
+             <td class="py-4 px-4 text-gray-500 dark:text-gray-400">{{ game.last_played }}</td>
            </tr>
          </tbody>
        </table>
@@ -226,7 +154,60 @@
 </template>
 
 <script setup>
+import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useApi } from '@/composables/useApi'
 
 const { t } = useI18n()
+const { getDashboardStats, getPlatformDistribution, getRecentActivity, getTopGames } = useApi()
+
+const stats = ref({
+    total_playtime_hours: 0,
+    games_count: 0,
+    steam_deck_hours: 0,
+    steam_deck_percentage: 0
+})
+const platformDistribution = ref({ platforms: [] })
+const recentActivity = ref({ activities: [] })
+const topGames = ref({ games: [] })
+const loading = ref({
+    stats: false,
+    platform: false,
+    activity: false,
+    topGames: false
+})
+const error = ref(null)
+
+const fetchDashboardData = async () => {
+    try {
+        loading.value.stats = true
+        loading.value.platform = true
+        loading.value.activity = true
+        loading.value.topGames = true
+
+        const [statsData, platformData, activityData, topGamesData] = await Promise.all([
+            getDashboardStats(),
+            getPlatformDistribution(),
+            getRecentActivity(),
+            getTopGames()
+        ])
+
+        stats.value = statsData
+        platformDistribution.value = platformData
+        recentActivity.value = activityData
+        topGames.value = topGamesData
+    } catch (err) {
+        console.error('Failed to fetch dashboard data:', err)
+        error.value = err.message || 'Unknown error'
+    } finally {
+        loading.value.stats = false
+        loading.value.platform = false
+        loading.value.activity = false
+        loading.value.topGames = false
+    }
+}
+
+onMounted(() => {
+    fetchDashboardData()
+})
 </script>

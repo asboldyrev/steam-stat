@@ -11,16 +11,17 @@
           <input
             type="text"
             :placeholder="t('library.filterPlaceholder')"
+            v-model.lazy="searchQuery"
             class="pl-10 pr-4 py-2.5 bg-white dark:bg-gray-800 border border-steam rounded-xl w-64 focus:outline-none focus:ring-2 focus:ring-steam-blue placeholder-gray-400 dark:placeholder-gray-500"
           />
           <svg class="w-5 h-5 absolute left-3 top-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
         </div>
-        <select class="px-4 py-2.5 bg-white dark:bg-gray-800 border border-steam rounded-xl focus:outline-none focus:ring-2 focus:ring-steam-blue">
-          <option>{{ t('library.sortBy.playtime') }}</option>
-          <option>{{ t('library.sortBy.name') }}</option>
-          <option>{{ t('library.sortBy.lastPlayed') }}</option>
+        <select v-model="sortBy" class="px-4 py-2.5 bg-white dark:bg-gray-800 border border-steam rounded-xl focus:outline-none focus:ring-2 focus:ring-steam-blue">
+          <option value="playtime">{{ t('library.sortBy.playtime') }}</option>
+          <option value="name">{{ t('library.sortBy.name') }}</option>
+          <option value="last_played">{{ t('library.sortBy.lastPlayed') }}</option>
         </select>
         <!-- Удалена кнопка "Добавить игру" -->
       </div>
@@ -28,23 +29,60 @@
 
     <!-- Platform Filters -->
     <div class="flex flex-wrap gap-3">
-      <button class="px-4 py-2 bg-white dark:bg-gray-800 border border-steam rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-smooth text-gray-700 dark:text-gray-300">
+      <button
+        @click="platformFilter = 'all'"
+        :class="platformFilter === 'all' ? 'bg-steam-blue text-white' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300'"
+        class="px-4 py-2 border border-steam rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-smooth"
+      >
         {{ t('library.platformFilters.all') }}
       </button>
-      <button class="px-4 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 rounded-xl hover:bg-blue-200 dark:hover:bg-blue-800/50 transition-smooth">
+      <button
+        @click="platformFilter = 'windows'"
+        :class="platformFilter === 'windows' ? 'bg-blue-600 text-white' : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'"
+        class="px-4 py-2 border border-blue-200 dark:border-blue-800 rounded-xl hover:bg-blue-200 dark:hover:bg-blue-800/50 transition-smooth"
+      >
         {{ t('library.platformFilters.windows') }}
       </button>
-      <button class="px-4 py-2 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800 rounded-xl hover:bg-green-200 dark:hover:bg-green-800/50 transition-smooth">
+      <button
+        @click="platformFilter = 'deck'"
+        :class="platformFilter === 'deck' ? 'bg-green-600 text-white' : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'"
+        class="px-4 py-2 border border-green-200 dark:border-green-800 rounded-xl hover:bg-green-200 dark:hover:bg-green-800/50 transition-smooth"
+      >
         {{ t('library.platformFilters.steamDeck') }}
       </button>
-      <button class="px-4 py-2 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 rounded-xl hover:bg-purple-200 dark:hover:bg-purple-800/50 transition-smooth">
+      <button
+        @click="platformFilter = 'linux'"
+        :class="platformFilter === 'linux' ? 'bg-purple-600 text-white' : 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'"
+        class="px-4 py-2 border border-purple-200 dark:border-purple-800 rounded-xl hover:bg-purple-200 dark:hover:bg-purple-800/50 transition-smooth"
+      >
         {{ t('library.platformFilters.linux') }}
       </button>
       <!-- Удален фильтр macOS -->
     </div>
 
     <!-- Games Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+    <div v-if="loading" class="text-center py-12">
+      <div class="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-steam-blue"></div>
+      <p class="mt-4 text-gray-500 dark:text-gray-400">{{ t('library.loading') }}</p>
+    </div>
+
+    <div v-else-if="error" class="text-center py-12">
+      <div class="text-red-500 dark:text-red-400 mb-4">
+        <svg class="w-12 h-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </div>
+      <p class="text-gray-700 dark:text-gray-300">{{ error }}</p>
+      <button @click="fetchGames" class="mt-4 px-6 py-2 bg-steam-blue text-white rounded-xl hover:bg-steam-blue-dark transition-smooth">
+        {{ t('library.retry') }}
+      </button>
+    </div>
+
+    <div v-else-if="games.length === 0" class="text-center py-12">
+      <p class="text-gray-500 dark:text-gray-400">{{ t('library.noGames') }}</p>
+    </div>
+
+    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
       <div
         v-for="game in games"
         :key="game.id"
@@ -54,7 +92,7 @@
           <div class="flex items-start justify-between mb-4">
             <div class="w-12 h-12 rounded-xl" :class="game.gradient">
               <div class="w-full h-full flex items-center justify-center text-white font-bold">
-                {{ game.abbr }}
+                {{ game.abbreviation }}
               </div>
             </div>
             <!-- Удалены индикаторы платформ (3 цветные точки) -->
@@ -64,11 +102,11 @@
           <div class="space-y-3">
             <div class="flex items-center justify-between">
               <span class="text-sm text-gray-600 dark:text-gray-400">{{ t('library.gameCard.totalTime') }}</span>
-              <span class="font-medium text-gray-700 dark:text-gray-300">{{ game.totalTime }}</span>
+              <span class="font-medium text-gray-700 dark:text-gray-300">{{ game.total_time }}</span>
             </div>
             <div class="flex items-center justify-between">
               <span class="text-sm text-gray-600 dark:text-gray-400">{{ t('library.gameCard.lastPlayed') }}</span>
-              <span class="text-sm text-gray-500 dark:text-gray-400">{{ game.lastPlayed }}</span>
+              <span class="text-sm text-gray-500 dark:text-gray-400">{{ game.last_played }}</span>
             </div>
             <div class="pt-3 border-t border-steam">
               <div class="flex items-center justify-between text-sm">
@@ -98,91 +136,47 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useApi } from '@/composables/useApi'
 
 const { t } = useI18n()
+const { getGames } = useApi()
 
-const games = ref([
-  {
-    id: 1,
-    name: 'Counter-Strike 2',
-    abbr: 'CS2',
-    publisher: 'Valve',
-    gradient: 'bg-gradient-to-br from-blue-600 to-cyan-500',
-    totalTime: '248h',
-    lastPlayed: 'Today',
-    platforms: { windows: true, deck: true, linux: true, mac: false }
-  },
-  {
-    id: 2,
-    name: 'Elden Ring',
-    abbr: 'ELD',
-    publisher: 'FromSoftware',
-    gradient: 'bg-gradient-to-br from-green-600 to-emerald-500',
-    totalTime: '186h',
-    lastPlayed: 'Yesterday',
-    platforms: { windows: true, deck: true, linux: false, mac: false }
-  },
-  {
-    id: 3,
-    name: 'Baldur\'s Gate 3',
-    abbr: 'BG3',
-    publisher: 'Larian Studios',
-    gradient: 'bg-gradient-to-br from-purple-600 to-pink-500',
-    totalTime: '142h',
-    lastPlayed: '3 days ago',
-    platforms: { windows: true, deck: true, linux: true, mac: false }
-  },
-  {
-    id: 4,
-    name: 'Cyberpunk 2077',
-    abbr: 'CP',
-    publisher: 'CD Projekt Red',
-    gradient: 'bg-gradient-to-br from-yellow-600 to-orange-500',
-    totalTime: '98h',
-    lastPlayed: '1 week ago',
-    platforms: { windows: true, deck: false, linux: false, mac: false }
-  },
-  {
-    id: 5,
-    name: 'Dota 2',
-    abbr: 'D2',
-    publisher: 'Valve',
-    gradient: 'bg-gradient-to-br from-red-600 to-rose-500',
-    totalTime: '512h',
-    lastPlayed: 'Today',
-    platforms: { windows: true, deck: true, linux: true, mac: true }
-  },
-  {
-    id: 6,
-    name: 'Hades',
-    abbr: 'HAD',
-    publisher: 'Supergiant Games',
-    gradient: 'bg-gradient-to-br from-indigo-600 to-violet-500',
-    totalTime: '64h',
-    lastPlayed: '2 weeks ago',
-    platforms: { windows: true, deck: true, linux: true, mac: true }
-  },
-  {
-    id: 7,
-    name: 'Stardew Valley',
-    abbr: 'SDV',
-    publisher: 'ConcernedApe',
-    gradient: 'bg-gradient-to-br from-teal-600 to-emerald-500',
-    totalTime: '78h',
-    lastPlayed: '1 month ago',
-    platforms: { windows: true, deck: true, linux: false, mac: true }
-  },
-  {
-    id: 8,
-    name: 'Portal 2',
-    abbr: 'P2',
-    publisher: 'Valve',
-    gradient: 'bg-gradient-to-br from-gray-600 to-slate-500',
-    totalTime: '42h',
-    lastPlayed: '3 months ago',
-    platforms: { windows: true, deck: false, linux: true, mac: true }
-  },
-])
+const games = ref([])
+const loading = ref(false)
+const error = ref(null)
+
+// Параметры фильтрации
+const searchQuery = ref('')
+const sortBy = ref('playtime')
+const platformFilter = ref('all')
+
+const fetchGames = async () => {
+    loading.value = true
+    error.value = null
+    try {
+        const params = {}
+        if (searchQuery.value) params.search = searchQuery.value
+        if (sortBy.value) params.sort = sortBy.value
+        if (platformFilter.value && platformFilter.value !== 'all') params.platform = platformFilter.value
+
+        const data = await getGames(params)
+        games.value = data.games || []
+    } catch (err) {
+        console.error('Failed to fetch games:', err)
+        error.value = err.message || 'Unknown error'
+    } finally {
+        loading.value = false
+    }
+}
+
+onMounted(() => {
+    fetchGames()
+})
+
+// Реактивные обновления при изменении фильтров (можно добавить debounce)
+watch([searchQuery, sortBy, platformFilter], () => {
+    fetchGames()
+})
 </script>
