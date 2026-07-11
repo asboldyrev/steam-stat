@@ -3,7 +3,42 @@
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+  --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+    'Segoe UI Symbol', 'Noto Color Emoji';
+
+  /* Steam-inspired color palette */
+  --color-steam-blue: oklch(60% 0.2 250);
+  --color-steam-dark: oklch(20% 0.05 250);
+  --color-steam-light: oklch(95% 0.05 250);
+  --color-steam-accent: oklch(70% 0.2 30);
+  --color-steam-deck: oklch(65% 0.2 120);
+  --color-steam-windows: oklch(65% 0.2 200);
+  --color-steam-linux: oklch(65% 0.2 280);
+  --color-steam-mac: oklch(65% 0.2 350);
+
+  --radius-card: 1rem;
+  --radius-button: 0.75rem;
+  --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.08);
+  --shadow-hover: 0 12px 48px rgba(0, 0, 0, 0.12);
+}
+
+/* Custom utilities */
+.bg-steam-gradient {
+  background: linear-gradient(135deg, var(--color-steam-dark) 0%, var(--color-steam-blue) 100%);
+}
+
+.border-steam {
+  border-color: oklch(90% 0.05 250);
+}
+
+.text-steam-accent {
+  color: var(--color-steam-accent);
+}
+
+/* Smooth transitions */
+.transition-smooth {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }

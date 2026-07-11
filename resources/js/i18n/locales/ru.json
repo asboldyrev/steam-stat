@@ -1,0 +1,111 @@
+{
+    "layout": {
+        "appName": "SteamStat",
+        "appTagline": "Отслеживайте свои игры",
+        "menu": {
+            "dashboard": "Дашборд",
+            "gameLibrary": "Библиотека игр"
+        },
+        "searchPlaceholder": "Поиск игр...",
+        "lastSync": "Последняя синхронизация: {time}",
+        "syncButton": "Синхронизировать",
+        "pageTitle": {
+            "dashboard": "Дашборд",
+            "gameLibrary": "Библиотека игр",
+            "gameDetails": "Детали игры",
+            "default": "SteamStat"
+        },
+        "pageSubtitle": "Отслеживайте и анализируйте свою игровую статистику Steam"
+    },
+    "dashboard": {
+        "stats": {
+            "totalPlaytime": "Общее время игры",
+            "gamesPlayed": "Сыграно игр",
+            "steamDeck": "Steam Deck",
+            "acrossAllPlatforms": "На всех платформах",
+            "ofTotalTime": "{percent}% от общего времени"
+        },
+        "platformDistribution": {
+            "title": "Распределение по платформам",
+            "windows": "Windows",
+            "steamDeck": "Steam Deck",
+            "linux": "Linux",
+            "macOS": "macOS",
+            "offline": "Офлайн",
+            "timePercent": "{hours}ч ({percent}%)"
+        },
+        "recentActivity": {
+            "title": "Недавняя активность",
+            "viewAll": "Посмотреть все",
+            "playedOn": "Играл {hours}ч на {platform} • {time}",
+            "today": "Сегодня",
+            "yesterday": "Вчера",
+            "daysAgo": "{count} дней назад"
+        },
+        "topGames": {
+            "title": "Топ игр по времени",
+            "columns": {
+                "game": "Игра",
+                "totalTime": "Общее время",
+                "lastPlayed": "Последний запуск"
+            }
+        }
+    },
+    "library": {
+        "title": "Ваша библиотека игр",
+        "subtitle": "{count} игр • {hours} всего часов",
+        "filterPlaceholder": "Фильтр по названию, платформе...",
+        "sortBy": {
+            "playtime": "Сортировать по: Времени",
+            "name": "Сортировать по: Названию",
+            "lastPlayed": "Сортировать по: Последнему запуску"
+        },
+        "platformFilters": {
+            "all": "Все платформы",
+            "windows": "Windows",
+            "steamDeck": "Steam Deck",
+            "linux": "Linux"
+        },
+        "gameCard": {
+            "totalTime": "Общее время",
+            "lastPlayed": "Последний запуск",
+            "platforms": "Платформы",
+            "viewDetails": "Подробнее",
+            "platformWindows": "Windows",
+            "platformDeck": "SteamDeck",
+            "platformLinux": "Linux"
+        }
+    },
+    "gameDetail": {
+        "totalPlaytime": "Общее время игры",
+        "lastPlayed": "Последний запуск",
+        "today": "Сегодня",
+        "platformUsage": "Использование платформ",
+        "platformWindows": "Windows",
+        "platformSteamDeck": "Steam Deck",
+        "platformLinux": "Linux"
+    },
+    "common": {
+        "hours": "{hours}ч",
+        "percent": "{percent}%",
+        "loading": "Загрузка...",
+        "error": "Что-то пошло не так",
+        "retry": "Повторить",
+        "save": "Сохранить",
+        "cancel": "Отмена",
+        "delete": "Удалить",
+        "edit": "Редактировать",
+        "confirm": "Подтвердить",
+        "yes": "Да",
+        "no": "Нет",
+        "theme": {
+            "light": "Светлая",
+            "dark": "Тёмная",
+            "system": "Системная"
+        },
+        "language": {
+            "en": "Английский",
+            "ru": "Русский"
+        }
+    }
+}
