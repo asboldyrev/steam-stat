@@ -17,4 +17,9 @@ class Game extends Model
     {
         return $this->hasMany(GameStat::class);
     }
+
+    public function latestGameStat()
+    {
+        return $this->hasOne(GameStat::class)->latest('date');
+    }
 }
