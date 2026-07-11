@@ -35,4 +35,13 @@ return [
         ],
     ],
 
+    'steam' => [
+        'api_key' => env('STEAM_API_KEY'),
+        'steam_id' => env('STEAM_ID'),
+        'base_url' => env(
+            'STEAM_API_BASE_URL',
+            'https://api.steampowered.com'
+        ),
+    ],
+
 ];
