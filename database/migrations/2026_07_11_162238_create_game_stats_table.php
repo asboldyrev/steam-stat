@@ -13,7 +13,18 @@ return new class extends Migration
     {
         Schema::create('game_stats', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('game_id')->constrained('games')->cascadeOnDelete();
+            $table->date('date');
+            $table->unsignedBigInteger('total_minutes')->default(0);
+            $table->unsignedBigInteger('windows_minutes')->default(0);
+            $table->unsignedBigInteger('linux_minutes')->default(0);
+            $table->unsignedBigInteger('mac_minutes')->default(0);
+            $table->unsignedBigInteger('deck_minutes')->default(0);
+            $table->unsignedBigInteger('disconnected_minutes')->default(0);
+            $table->timestamp('last_played_at')->nullable();
             $table->timestamps();
+
+            $table->unique(['game_id', 'date']);
         });
     }
 

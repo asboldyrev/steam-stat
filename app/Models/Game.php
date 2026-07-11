@@ -6,5 +6,15 @@ use Illuminate\Database\Eloquent\Model;
 
 class Game extends Model
 {
-    //
+    protected $fillable = [
+        'app_id',
+        'name',
+        'icon_url',
+        'has_community_visible_stats',
+    ];
+
+    public function gameStats()
+    {
+        return $this->hasMany(GameStat::class);
+    }
 }

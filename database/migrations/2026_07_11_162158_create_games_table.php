@@ -13,6 +13,10 @@ return new class extends Migration
     {
         Schema::create('games', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('app_id')->unique()->index();
+            $table->string('name');
+            $table->string('icon_url')->nullable();
+            $table->boolean('has_community_visible_stats')->default(false);
             $table->timestamps();
         });
     }

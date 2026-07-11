@@ -13,6 +13,16 @@ return new class extends Migration
     {
         Schema::create('summary_stats', function (Blueprint $table) {
             $table->id();
+            $table->date('date')->unique();
+            $table->unsignedInteger('games_count')->default(0);
+            $table->unsignedBigInteger('total_minutes')->default(0);
+            $table->unsignedBigInteger('windows_minutes')->default(0);
+            $table->unsignedBigInteger('linux_minutes')->default(0);
+            $table->unsignedBigInteger('linux_desktop_minutes')->default(0);
+            $table->unsignedBigInteger('mac_minutes')->default(0);
+            $table->unsignedBigInteger('deck_minutes')->default(0);
+            $table->unsignedBigInteger('disconnected_minutes')->default(0);
+            $table->unsignedBigInteger('unclassified_minutes')->default(0);
             $table->timestamps();
         });
     }
