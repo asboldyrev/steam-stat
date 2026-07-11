@@ -78,6 +78,11 @@ final readonly class SteamGameData implements JsonSerializable
         );
     }
 
+    public function getUrl(): string
+    {
+        return 'https://store.steampowered.com/app/' . $this->appId;
+    }
+
     public function jsonSerialize(): array
     {
         return [
