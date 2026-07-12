@@ -32,12 +32,12 @@
             "linux": "Linux",
             "macOS": "macOS",
             "offline": "Офлайн",
-            "timePercent": "{hours}ч ({percent}%)"
+            "timePercent": "{hours} ч. ({percent}%)"
         },
         "recentActivity": {
             "title": "Недавняя активность",
             "viewAll": "Посмотреть все",
-            "playedOn": "Играл {hours}ч на {platform} • {time}",
+            "playedOn": "Играл {hours} ч на {platform} • {time}",
             "today": "Сегодня",
             "yesterday": "Вчера",
             "daysAgo": "{count} дней назад"
@@ -86,7 +86,7 @@
         "platformLinux": "Linux"
     },
     "common": {
-        "hours": "{hours}ч",
+        "hours": "{hours} ч.",
         "percent": "{percent}%",
         "loading": "Загрузка...",
         "error": "Что-то пошло не так",

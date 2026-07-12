@@ -324,6 +324,6 @@ final class DashboardController extends Controller
         }
 
         $daysDiff = $date->diffInDays(Carbon::now());
-        return $daysDiff . ' days ago';
+        return round($daysDiff) . ' days ago';
     }
 }
