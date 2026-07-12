@@ -261,7 +261,7 @@ final class DashboardController extends Controller
                 'game_id' => $game->id,
                 'game_name' => $game->name,
                 'icon_url' => $game->iconUrlLarge(),
-                'total_time' => $totalHours . 'h',
+                'total_time' => $totalHours,
                 'last_played' => $timeAgo,
                 'gradient' => $gradient,
             ];

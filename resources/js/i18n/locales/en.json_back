@@ -86,14 +86,9 @@
         "platformLinux": "Linux"
     },
     "common": {
-        "hours": {
-            "short": " h",
-            "full": "hour|hours"
-        },
-        "years": "year|years",
-        "months": "month|months",
-        "days": "day|days",
+        "hours": "{hours}h",
         "percent": "{percent}%",
+        "loading": "Loading...",
         "error": "Something went wrong",
         "retry": "Retry",
         "save": "Save",
@@ -111,8 +106,6 @@
         "language": {
             "en": "English",
             "ru": "Русский"
-        },
-        "loading": "Loading...",
-        "noData": "No data"
+        }
     }
 }
