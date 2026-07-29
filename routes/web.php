@@ -1,7 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\SpaController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\GameController;
 use App\Http\Controllers\Api\SyncController;
@@ -23,4 +22,4 @@ Route::prefix('api')->group(function () {
 });
 
 // SPA fallback — должен быть ПОСЛЕДНИМ
-Route::get('/{any}', [SpaController::class, 'index'])->where('any', '.*');
+Route::view('/{any}', 'index')->where('any', '.*');

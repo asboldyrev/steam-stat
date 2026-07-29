@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Steam;
 
 use App\Data\SteamGameData;
+use App\Data\SteamPlaytimeTotalsData;
 use App\Models\Game;
 use App\Models\GameStat;
 use App\Models\SummaryStat;
@@ -81,7 +82,7 @@ final class SteamStatsSyncService
         }
     }
 
-    private function syncSummaryStats(\App\Data\SteamPlaytimeTotalsData $totals, string $dateString): void
+    private function syncSummaryStats(SteamPlaytimeTotalsData $totals, string $dateString): void
     {
         SummaryStat::updateOrCreate(
             ['date' => $dateString],
