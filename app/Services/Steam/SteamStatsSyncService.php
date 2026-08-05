@@ -18,10 +18,6 @@ final class SteamStatsSyncService
         private readonly SteamApiClient $steamApi,
     ) {}
 
-    /**
-     * Запросить статистику из Steam API и сохранить в БД.
-     * Если за указанную дату уже есть записи — обновить их.
-     */
     public function sync(?CarbonImmutable $date = null): void
     {
         $date ??= CarbonImmutable::today();
@@ -64,6 +60,33 @@ final class SteamStatsSyncService
                 continue;
             }
 
+            // Получаем последнюю запись для этой игры
+            $lastStat = GameStat::query()
+                ->where('game_id', $dbGame->id)
+                ->orderByDesc('date')
+                ->first();
+
+            // Если данные не изменились — пропускаем
+            if ($lastStat !== null
+                && (int) $lastStat->total_minutes === $game->totalMinutes
+                && (int) $lastStat->windows_minutes === $game->windowsMinutes
+                && (int) $lastStat->linux_minutes === $game->linuxMinutes
+                && (int) $lastStat->mac_minutes === $game->macMinutes
+                && (int) $lastStat->deck_minutes === $game->deckMinutes
+                && (int) $lastStat->disconnected_minutes === $game->disconnectedMinutes
+            ) {
+                continue;
+            }
+
+            // Вычисляем delta
+            $deltaTotal = $lastStat ? $game->totalMinutes - (int) $lastStat->total_minutes : 0;
+            $deltaWindows = $lastStat ? $game->windowsMinutes - (int) $lastStat->windows_minutes : 0;
+            $deltaLinux = $lastStat ? $game->linuxMinutes - (int) $lastStat->linux_minutes : 0;
+            $deltaMac = $lastStat ? $game->macMinutes - (int) $lastStat->mac_minutes : 0;
+            $deltaDeck = $lastStat ? $game->deckMinutes - (int) $lastStat->deck_minutes : 0;
+            $deltaDisconnected = $lastStat ? $game->disconnectedMinutes - (int) $lastStat->disconnected_minutes : 0;
+
+            // Создаём новую запись (или обновляем запись за сегодня если уже есть)
             GameStat::updateOrCreate(
                 [
                     'game_id' => $dbGame->id,
@@ -76,6 +99,12 @@ final class SteamStatsSyncService
                     'mac_minutes' => $game->macMinutes,
                     'deck_minutes' => $game->deckMinutes,
                     'disconnected_minutes' => $game->disconnectedMinutes,
+                    'delta_total_minutes' => $deltaTotal,
+                    'delta_windows_minutes' => $deltaWindows,
+                    'delta_linux_minutes' => $deltaLinux,
+                    'delta_mac_minutes' => $deltaMac,
+                    'delta_deck_minutes' => $deltaDeck,
+                    'delta_disconnected_minutes' => $deltaDisconnected,
                     'last_played_at' => $game->lastPlayedAt,
                 ]
             );
@@ -84,6 +113,33 @@ final class SteamStatsSyncService
 
     private function syncSummaryStats(SteamPlaytimeTotalsData $totals, string $dateString): void
     {
+        // Получаем последнюю запись суммарной статистики
+        $lastStat = SummaryStat::query()
+            ->orderByDesc('date')
+            ->first();
+
+        // Если данные не изменились — пропускаем
+        if ($lastStat !== null
+            && (int) $lastStat->total_minutes === $totals->totalMinutes
+            && (int) $lastStat->windows_minutes === $totals->windowsMinutes
+            && (int) $lastStat->linux_minutes === $totals->linuxMinutes
+            && (int) $lastStat->mac_minutes === $totals->macMinutes
+            && (int) $lastStat->deck_minutes === $totals->deckMinutes
+            && (int) $lastStat->disconnected_minutes === $totals->disconnectedMinutes
+        ) {
+            return;
+        }
+
+        // Вычисляем delta
+        $deltaTotal = $lastStat ? $totals->totalMinutes - (int) $lastStat->total_minutes : 0;
+        $deltaWindows = $lastStat ? $totals->windowsMinutes - (int) $lastStat->windows_minutes : 0;
+        $deltaLinux = $lastStat ? $totals->linuxMinutes - (int) $lastStat->linux_minutes : 0;
+        $deltaLinuxDesktop = $lastStat ? $totals->linuxDesktopMinutes - (int) $lastStat->linux_desktop_minutes : 0;
+        $deltaMac = $lastStat ? $totals->macMinutes - (int) $lastStat->mac_minutes : 0;
+        $deltaDeck = $lastStat ? $totals->deckMinutes - (int) $lastStat->deck_minutes : 0;
+        $deltaDisconnected = $lastStat ? $totals->disconnectedMinutes - (int) $lastStat->disconnected_minutes : 0;
+        $deltaUnclassified = $lastStat ? $totals->unclassifiedMinutes - (int) $lastStat->unclassified_minutes : 0;
+
         SummaryStat::updateOrCreate(
             ['date' => $dateString],
             [
@@ -96,6 +152,14 @@ final class SteamStatsSyncService
                 'deck_minutes' => $totals->deckMinutes,
                 'disconnected_minutes' => $totals->disconnectedMinutes,
                 'unclassified_minutes' => $totals->unclassifiedMinutes,
+                'delta_total_minutes' => $deltaTotal,
+                'delta_windows_minutes' => $deltaWindows,
+                'delta_linux_minutes' => $deltaLinux,
+                'delta_linux_desktop_minutes' => $deltaLinuxDesktop,
+                'delta_mac_minutes' => $deltaMac,
+                'delta_deck_minutes' => $deltaDeck,
+                'delta_disconnected_minutes' => $deltaDisconnected,
+                'delta_unclassified_minutes' => $deltaUnclassified,
             ]
         );
     }

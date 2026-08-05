@@ -19,7 +19,7 @@ class SteamFetchStats extends Command
 
         try {
             $syncService->sync();
-            $this->info('Statistics saved successfully.');
+            $this->info('Statistics synced successfully. New records saved only if data changed.');
             return self::SUCCESS;
         } catch (\Throwable $e) {
             $this->error('Failed to fetch statistics: ' . $e->getMessage());
