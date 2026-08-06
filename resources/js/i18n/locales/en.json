@@ -82,7 +82,8 @@
         "platformUsage": "Platform Usage",
         "platformWindows": "Windows",
         "platformSteamDeck": "Steam Deck",
-        "platformLinux": "Linux"
+        "platformLinux": "Linux",
+        "playtimeHistory": "Playtime history"
     },
     "common": {
         "hours": {

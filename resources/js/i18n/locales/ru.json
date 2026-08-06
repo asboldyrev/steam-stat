@@ -72,6 +72,16 @@
             "platformLinux": "Linux"
         }
     },
+    "gameDetail": {
+        "totalPlaytime": "Общее время игры",
+        "lastPlayed": "Последний запуск",
+        "today": "Сегодня",
+        "platformUsage": "Использование платформ",
+        "platformWindows": "Windows",
+        "platformSteamDeck": "Steam Deck",
+        "platformLinux": "Linux",
+        "playtimeHistory": "История игры"
+    },
     "common": {
         "hours": {
             "short": " ч.",

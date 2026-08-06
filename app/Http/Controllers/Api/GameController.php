@@ -127,7 +127,6 @@ final class GameController extends Controller
         $latestStat = $game->gameStats()->latest('date')->first();
 
         $totalPlaytimeHours = $latestStat ? (int) round($latestStat->total_minutes / 60) : 0;
-        $lastPlayed = $latestStat ? $this->formatTimeAgo($latestStat->last_played_at) : 'Never';
 
         return response()->json([
             'id' => $game->id,
@@ -135,7 +134,7 @@ final class GameController extends Controller
             'abbreviation' => $this->generateAbbreviation($game->name),
             'icon_url' => $game->iconUrlLarge(),
             'total_playtime_hours' => $totalPlaytimeHours,
-            'last_played' => $lastPlayed,
+            'last_played' => $latestStat->last_played_at->timestamp,
         ]);
     }
 
@@ -228,18 +227,19 @@ final class GameController extends Controller
             return response()->json(['history' => []]);
         }
 
-        $maxHours = $stats->max('total_minutes') / 60;
+        $maxMinutes = $stats->max('delta_total_minutes');
 
         $history = [];
         foreach ($stats as $stat) {
-            $hours = $stat->total_minutes / 60;
             $platform = $this->determinePlatform($stat);
             $color = $this->platformColor($platform);
-            $percentage = $maxHours > 0 ? (int) round(($hours / $maxHours) * 100) : 0;
+
+            $minutes = $stat->delta_total_minutes;
+            $percentage = $maxMinutes > 0 ? (int) round(($minutes / $maxMinutes) * 100) : 0;
 
             $history[] = [
-                'day' => Carbon::parse($stat->date)->format('D'),
-                'hours' => round($hours, 1),
+                'day' => Carbon::parse($stat->date),
+                'minutes' => $minutes,
                 'platform' => $platform,
                 'color' => $color,
                 'percentage' => $percentage,
@@ -247,39 +247,6 @@ final class GameController extends Controller
         }
 
         return response()->json(['history' => $history]);
-    }
-
-    /**
-     * Возвращает последние 5 сессий (записей) для игры.
-     */
-    public function recentSessions(Game $game): JsonResponse
-    {
-        $stats = $game->gameStats()
-            ->orderBy('date', 'desc')
-            ->limit(5)
-            ->get();
-
-        $sessions = [];
-        foreach ($stats as $stat) {
-            $hours = floor($stat->total_minutes / 60);
-            $minutes = $stat->total_minutes % 60;
-            $duration = $hours > 0 ? sprintf('%dh %dm', $hours, $minutes) : sprintf('%dm', $minutes);
-
-            $platform = $this->determinePlatform($stat);
-            $platformClass = $this->platformCssClass($platform);
-
-            $sessions[] = [
-                'id' => $stat->id,
-                'date' => $this->formatTimeAgo($stat->last_played_at),
-                'duration' => $duration,
-                'platform' => $platform,
-                'platform_class' => $platformClass,
-                'time_of_day' => '',
-                'notes' => '',
-            ];
-        }
-
-        return response()->json(['sessions' => $sessions]);
     }
 
     /**
@@ -304,23 +271,6 @@ final class GameController extends Controller
         }
 
         return mb_strlen($abbr, 'UTF-8') > 0 ? $abbr : '???';
-    }
-
-    /**
-     * Форматирует дату в относительное время.
-     */
-    private function formatTimeAgo(Carbon $date): string
-    {
-        if ($date->isToday()) {
-            return 'Today';
-        }
-
-        if ($date->isYesterday()) {
-            return 'Yesterday';
-        }
-
-        $daysDiff = $date->diffInDays(Carbon::now());
-        return $daysDiff . ' days ago';
     }
 
     /**
@@ -352,21 +302,6 @@ final class GameController extends Controller
             'macOS' => 'bg-orange-500',
             'Offline' => 'bg-gray-500',
             default => 'bg-gray-300',
-        };
-    }
-
-    /**
-     * Возвращает CSS класс для платформы.
-     */
-    private function platformCssClass(string $platform): string
-    {
-        return match ($platform) {
-            'Windows' => 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300',
-            'Steam Deck' => 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300',
-            'Linux' => 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300',
-            'macOS' => 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300',
-            'Offline' => 'bg-gray-100 dark:bg-gray-900/30 text-gray-700 dark:text-gray-300',
-            default => 'bg-gray-100 dark:bg-gray-900/30 text-gray-700 dark:text-gray-300',
         };
     }
 }
