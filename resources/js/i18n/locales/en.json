@@ -52,7 +52,7 @@
     },
     "library": {
         "title": "Your Game Library",
-        "subtitle": "{count} games • {hours} total hours",
+        "totalHours": "{hours} total hours",
         "filterPlaceholder": "Filter by name, platform...",
         "sortBy": {
             "playtime": "Sort by: Playtime",
@@ -112,6 +112,7 @@
             "ru": "Русский"
         },
         "loading": "Loading...",
-        "noData": "No data"
+        "noData": "No data",
+        "gameCount": "game|games"
     }
 }

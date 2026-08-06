@@ -75,7 +75,7 @@ final class GameController extends Controller
                     ->limit(1),
                 'asc'
             ),
-            'lastPlayed' => $query->orderByDesc('last_played_at'),
+            'last_played' => $query->orderByDesc('last_played_at'),
             default => $query->orderByDesc('total_minutes'), // playtime
         };
 
@@ -97,7 +97,6 @@ final class GameController extends Controller
             $abbreviation = $this->generateAbbreviation($game->name);
 
             $totalHours = (int) round($stat->total_minutes / 60);
-            $timeAgo = $this->formatTimeAgo($stat->last_played_at);
             $gradient = $gradients[$index % count($gradients)];
 
             $games[] = [
@@ -106,8 +105,8 @@ final class GameController extends Controller
                 'abbreviation' => $abbreviation,
                 'icon_url' => $game->iconUrlLarge(),
                 'gradient' => $gradient,
-                'total_time' => $totalHours . 'h',
-                'last_played' => $timeAgo,
+                'total_time' => $totalHours,
+                'last_played' => $stat->last_played_at->timestamp,
                 'platforms' => [
                     'windows' => $stat->windows_minutes > 0,
                     'deck' => $stat->deck_minutes > 0,

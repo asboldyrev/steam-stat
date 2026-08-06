@@ -47,6 +47,31 @@
             }
         }
     },
+    "library": {
+        "title": "Ваша библиотека игр",
+        "totalHours": "{hours} всего часов",
+        "filterPlaceholder": "Фильтр по названию, платформе...",
+        "sortBy": {
+            "playtime": "Сортировать по: Времени",
+            "name": "Сортировать по: Названию",
+            "lastPlayed": "Сортировать по: Последнему запуску"
+        },
+        "platformFilters": {
+            "all": "Все платформы",
+            "windows": "Windows",
+            "steamDeck": "Steam Deck",
+            "linux": "Linux"
+        },
+        "gameCard": {
+            "totalTime": "Общее время",
+            "lastPlayed": "Последний запуск",
+            "platforms": "Платформы",
+            "viewDetails": "Подробнее",
+            "platformWindows": "Windows",
+            "platformDeck": "SteamDeck",
+            "platformLinux": "Linux"
+        }
+    },
     "common": {
         "hours": {
             "short": " ч.",
@@ -75,6 +100,7 @@
             "ru": "Русский"
         },
         "loading": "Загрузка...",
-        "noData": "Данные отсутствуют."
+        "noData": "Данные отсутствуют.",
+        "gameCount": "игра|игры|игр"
     }
 }
