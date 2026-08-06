@@ -19,15 +19,16 @@
                 </div>
                 <div class="flex-1">
                     <h4 class="font-medium text-gray-900 dark:text-white">{{ activity.game_name }}</h4>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('dashboard.recentActivity.playedOn', { hours: activity.duration_hours, platform: activity.platform, time: activity.time_ago }) }}</p>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('dashboard.recentActivity.playedOn', { time: dayjs.duration({ minutes: activity.duration_minutes }).humanize(), platform: activity.platform }) }}</p>
                 </div>
-                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ activity.duration_hours }} {{ t('common.hours.full', activity.duration_hours) }}</span>
+                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ dayjs.unix(activity.last_played).fromNow() }}</span>
             </div>
         </div>
     </div>
 </template>
 
 <script setup>
+    import dayjs from '@/bootstrap/dayjs.js'
     import { useI18n } from 'vue-i18n'
 
     const props = defineProps({

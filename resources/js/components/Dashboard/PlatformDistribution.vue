@@ -16,7 +16,7 @@
                     <span class="text-gray-700 dark:text-gray-300">{{ platform.name }}</span>
                 </div>
                 <div class="flex items-center gap-4">
-                    <span class="font-medium text-gray-700 dark:text-gray-300">{{ t('dashboard.platformDistribution.timePercent', { hours: $formatNumber(platform.hours), percent: platform.percentage }) }}</span>
+                    <span class="font-medium text-gray-700 dark:text-gray-300">{{ $formatNumber(platform.hours) }} {{ t('common.hours.full', platform.hours) }} ({{ platform.percentage }}%)</span>
                     <div class="w-48 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                         <div class="h-full rounded-full" :class="platform.color" :style="{ width: platform.percentage + '%' }"></div>
                     </div>

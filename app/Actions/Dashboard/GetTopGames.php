@@ -13,7 +13,7 @@ final class GetTopGames
         private readonly GetLatestGameStats $latestGameStats,
     ) {}
 
-    public function execute(): JsonResponse
+    public function execute(): array
     {
         $stats = $this->latestGameStats->execute(limit: 3);
 
@@ -42,6 +42,6 @@ final class GetTopGames
             ];
         }
 
-        return response()->json(['games' => $games]);
+        return $games;
     }
 }

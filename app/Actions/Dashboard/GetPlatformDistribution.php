@@ -5,27 +5,25 @@ declare(strict_types=1);
 namespace App\Actions\Dashboard;
 
 use App\Enums\GamePlatform;
+use App\Models\SummaryStat;
 use App\Queries\GameStats\GetLatestGameStats;
-use Illuminate\Http\JsonResponse;
 
 final class GetPlatformDistribution
 {
-    public function __construct(
-        private readonly GetLatestGameStats $latestGameStats,
-    ) {}
+    public function __construct() {}
 
     /**
      * Возвращает распределение по платформам.
      */
-    public function execute(): JsonResponse
+    public function execute(): array
     {
-        $stats = $this->latestGameStats->execute();
+        $stat = SummaryStat::orderByDesc('date')->first();
 
-        $windowsMinutes = $stats->sum('windows_minutes');
-        $linuxMinutes = $stats->sum('linux_minutes');
-        $macMinutes = $stats->sum('mac_minutes');
-        $deckMinutes = $stats->sum('deck_minutes');
-        $disconnectedMinutes = $stats->sum('disconnected_minutes');
+        $windowsMinutes = $stat->windows_minutes;
+        $linuxMinutes = $stat->linux_minutes;
+        $macMinutes = $stat->mac_minutes;
+        $deckMinutes = $stat->deck_minutes;
+        $disconnectedMinutes = $stat->disconnected_minutes;
 
         $linuxDesktopMinutes = $linuxMinutes - $deckMinutes;
 
@@ -54,6 +52,6 @@ final class GetPlatformDistribution
         // Сортировка по убыванию percentage
         usort($result, fn($a, $b) => $b['percentage'] <=> $a['percentage']);
 
-        return response()->json(['platforms' => $result]);
+        return $result;
     }
 }

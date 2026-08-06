@@ -2,6 +2,7 @@ import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { setLocale as setI18nLocale } from '@/i18n/index.js'
 import { pluralRules } from '@/i18n/pluralRules.js'
+import dayjs from '@/bootstrap/dayjs.js'
 
 /**
  * Composable для управления языком (локализацией)
@@ -24,10 +25,12 @@ export function useLocale() {
         if (saved === 'en' || saved === 'ru') {
             locale.value = saved
             setI18nLocale(saved)
+            dayjs.locale(saved)
         } else {
             // По умолчанию 'en'
             locale.value = 'en'
             setI18nLocale('en')
+            dayjs.locale('en')
         }
     }
 
@@ -39,6 +42,7 @@ export function useLocale() {
         }
         locale.value = newLocale
         setI18nLocale(newLocale)
+        dayjs.locale(newLocale)
         localStorage.setItem('locale', newLocale)
     }
 

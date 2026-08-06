@@ -31,8 +31,7 @@
             "steamDeck": "Steam Deck",
             "linux": "Linux",
             "macOS": "macOS",
-            "offline": "Offline",
-            "timePercent": "{hours}h ({percent}%)"
+            "offline": "Offline"
         },
         "recentActivity": {
             "title": "Recent Activity",

@@ -24,12 +24,9 @@ final class DashboardController extends Controller
     /**
      * Возвращает распределение по платформам.
      */
-    public function platformDistribution(
-        GetPlatformDistribution $action,
-    ): JsonResponse {
-        return response()->json([
-            'platforms' => $action->execute(),
-        ]);
+    public function platformDistribution(GetPlatformDistribution $action): JsonResponse
+    {
+        return response()->json($action->execute());
     }
 
     /**
@@ -38,12 +35,9 @@ final class DashboardController extends Controller
      * duration_hours — время последней сессии (последнего дня игры) в часах, округлённое.
      * total_hours — суммарное время всех сессий (всех дней) для игры в часах, округлённое.
      */
-    public function recentActivity(
-        GetRecentActivity $action,
-    ): JsonResponse {
-        return response()->json([
-            'activities' => $action->execute(),
-        ]);
+    public function recentActivity(GetRecentActivity $action): JsonResponse
+    {
+        return response()->json($action->execute());
     }
 
     /**
@@ -51,8 +45,6 @@ final class DashboardController extends Controller
      */
     public function topGames(GetTopGames $action): JsonResponse
     {
-        return response()->json([
-            'games' => $action->execute(),
-        ]);
+        return response()->json($action->execute());
     }
 }

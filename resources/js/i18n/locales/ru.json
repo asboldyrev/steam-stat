@@ -28,13 +28,12 @@
             "steamDeck": "Steam Deck",
             "linux": "Linux",
             "macOS": "macOS",
-            "offline": "Офлайн",
-            "timePercent": "{hours} ч. ({percent}%)"
+            "offline": "Офлайн"
         },
         "recentActivity": {
             "title": "Недавняя активность",
             "viewAll": "Посмотреть все",
-            "playedOn": "Играл {hours} ч на {platform} • {time}",
+            "playedOn": "Играл {time} на {platform}",
             "today": "Сегодня",
             "yesterday": "Вчера",
             "daysAgo": "{count} дней назад"

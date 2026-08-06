@@ -7,12 +7,11 @@ namespace App\Actions\Dashboard;
 use App\Models\GameStat;
 use App\Support\Games\GameNameAbbreviator;
 use App\Support\Games\GamePlatformDetector;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 
 final class GetRecentActivity
 {
-    public function execute(): JsonResponse
+    public function execute(): array
     {
         // Получаем последние записи по last_played_at, группируем по game_id
         $latestStats = GameStat::query()
@@ -24,7 +23,7 @@ final class GetRecentActivity
             ->get();
 
         if ($latestStats->isEmpty()) {
-            return response()->json(['activities' => []]);
+            return [];
         }
 
         $activities = [];
@@ -49,7 +48,7 @@ final class GetRecentActivity
 
             $game = $gameStat->game;
             $abbreviation = GameNameAbbreviator::generateAbbreviation($game->name);
-            $durationHours = (int) round($gameStat->total_minutes / 60);
+            $durationMinutes = (int) round($gameStat->delta_total_minutes);
             $platform = GamePlatformDetector::determinePlatform($gameStat);
             $gradient = $gradients[$index % count($gradients)];
 
@@ -58,13 +57,13 @@ final class GetRecentActivity
                 'game_name' => $game->name,
                 'abbreviation' => $abbreviation,
                 'icon_url' => $game->iconUrlLarge(),
-                'duration_hours' => $durationHours,
+                'duration_minutes' => $durationMinutes,
                 'platform' => $platform,
                 'last_played' => $gameStat->last_played_at->timestamp,
                 'gradient' => $gradient,
             ];
         }
 
-        return response()->json(['activities' => $activities]);
+        return $activities;
     }
 }

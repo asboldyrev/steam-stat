@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 namespace App\Actions\Dashboard;
 
-use App\Queries\GameStats\GetLatestGameStats;
+use App\Models\Game;
+use App\Models\SummaryStat;
 
 final class GetDashboardStats
 {
-    public function __construct(
-        private readonly GetLatestGameStats $latestGameStats,
-    ) {}
+    public function __construct() {}
 
     /**
      * @return array{
@@ -22,16 +21,12 @@ final class GetDashboardStats
      */
     public function execute(): array
     {
-        $stats = $this->latestGameStats->execute();
+        $stat = SummaryStat::orderByDesc('date')->first();
 
-        $totalMinutes = (int) $stats->sum('total_minutes');
-        $deckMinutes = (int) $stats->sum('deck_minutes');
+        $totalMinutes = (int) $stat->total_minutes;
+        $deckMinutes = (int) $stat->deck_minutes;
 
-        $gamesCount = $stats
-            ->where('total_minutes', '>', 0)
-            ->pluck('game_id')
-            ->unique()
-            ->count();
+        $gamesCount = Game::query()->count();
 
         $totalHours = (int) round($totalMinutes / 60);
         $deckHours = (int) round($deckMinutes / 60);

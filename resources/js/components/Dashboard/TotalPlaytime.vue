@@ -17,6 +17,7 @@
     import { Clock } from '@lucide/vue'
     import { computed } from 'vue'
     import { useI18n } from 'vue-i18n'
+    import dayjs from '@/bootstrap/dayjs.js'
 
     const props = defineProps({
         loading: Boolean,
@@ -26,40 +27,45 @@
     const { t } = useI18n()
 
     const formatedTotalPlaytime = computed(() => {
-        let playtime = props.stats.total_playtime_hours
-        let result = []
+        const duration = dayjs.duration(props.stats.total_playtime_hours, 'hours')
 
-        if (playtime > 8760) {
-            const years = Math.floor(playtime / 8760)
+        const parts = [
+            {
+                value: duration.months(),
+                forms: ['месяц', 'месяца', 'месяцев'],
+            },
+            {
+                value: duration.days(),
+                forms: ['день', 'дня', 'дней'],
+            },
+            {
+                value: duration.hours(),
+                forms: ['час', 'часа', 'часов'],
+            },
+        ]
 
-            if (years) {
-                result.push(years + ' ' + t('common.years', years))
-                playtime = playtime % 8760
-            }
-        }
-
-        if (playtime > 720) {
-            const months = Math.floor(playtime / 720)
-
-            if (months) {
-                result.push(months + ' ' + t('common.months', months))
-                playtime = playtime % 720
-            }
-        }
-
-        if (playtime > 24) {
-            const days = Math.floor(playtime / 24)
-
-            if (days) {
-                result.push(days + ' ' + t('common.days', days))
-                playtime = playtime % 24
-            }
-        }
-
-        if (playtime) {
-            result.push(playtime + ' ' + t('common.hours.full', playtime))
-        }
-
-        return result.join(', ')
+        return parts
+            .filter(({ value }) => value > 0)
+            .map(({ value, forms }) => `${value} ${pluralize(value, forms)}`)
+            .join(', ')
     })
+
+    function pluralize(number, forms) {
+        const abs = Math.abs(number) % 100
+        const lastDigit = abs % 10
+
+        if (abs >= 11 && abs <= 19) {
+            return forms[2]
+        }
+
+        if (lastDigit === 1) {
+            return forms[0]
+        }
+
+        if (lastDigit >= 2 && lastDigit <= 4) {
+            return forms[1]
+        }
+
+        return forms[2]
+    }
 </script>

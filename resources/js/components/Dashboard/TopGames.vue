@@ -35,8 +35,8 @@
                                 </div>
                             </div>
                         </td>
-                        <td class="py-4 px-4 font-medium text-gray-700 dark:text-gray-300">{{ $formatNumber(game.total_time) }} {{ t('common.hours.short') }}</td>
-                        <td class="py-4 px-4 text-gray-500 dark:text-gray-400">{{ game.last_played }}</td>
+                        <td class="py-4 px-4 font-medium text-gray-700 dark:text-gray-300">{{ $formatNumber(game.total_time) }} {{ t('common.hours.full', game.total_time) }}</td>
+                        <td class="py-4 px-4 text-gray-500 dark:text-gray-400">{{ dayjs(game.last_played).fromNow() }}</td>
                     </tr>
                 </tbody>
             </table>
@@ -45,6 +45,7 @@
 </template>
 
 <script setup>
+    import dayjs from '@/bootstrap/dayjs.js'
     import { useI18n } from 'vue-i18n'
 
     const props = defineProps({
