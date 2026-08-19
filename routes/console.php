@@ -2,4 +2,6 @@
 
 use Illuminate\Support\Facades\Schedule;
 
-Schedule::command('steam:fetch-stats')->hourly();
+Schedule::command('steam:fetch-stats')
+    ->everyFifteenMinutes()
+    ->withoutOverlapping();
