@@ -86,7 +86,9 @@
                     <h3 class="font-semibold text-gray-900 dark:text-white">{{ t('activity.heatmap.title') }}</h3>
                     <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('activity.heatmap.subtitle') }}</p>
                 </div>
-                <BaseChart v-if="insights.heatmap.length" :option="heatmapChartOption" :height="260" />
+                <div v-if="insights.heatmap.length" class="overflow-x-auto">
+                    <BaseChart :option="heatmapChartOption" :height="270" />
+                </div>
                 <PageState v-else :message="t('activity.noActivity')" />
             </article>
         </template>
@@ -251,6 +253,9 @@ const heatmapChartOption = computed(() => {
     const maxMinutes = Math.max(1, ...data.map((item) => Number(item[1]) || 0))
     const firstDate = data[0]?.[0] || dateRange.value.from
     const lastDate = data[data.length - 1]?.[0] || dateRange.value.to
+    const days = Math.max(1, data.length)
+    const cellWidth = days <= 45 ? 44 : days <= 100 ? 34 : days <= 190 ? 24 : 18
+    const cellHeight = days <= 100 ? 28 : days <= 190 ? 24 : 18
 
     return {
         backgroundColor: 'transparent',
@@ -258,15 +263,9 @@ const heatmapChartOption = computed(() => {
             formatter: ({ value }) => `${formatDate(value?.[0])}<br/>${formatMinutes(value?.[1] || 0)}`,
         },
         visualMap: {
+            show: false,
             min: 0,
             max: maxMinutes,
-            calculable: false,
-            orient: 'horizontal',
-            left: 'center',
-            bottom: 2,
-            itemWidth: 120,
-            itemHeight: 10,
-            textStyle: { color: axisColor.value },
             inRange: {
                 color: isDark.value
                     ? ['#1f2937', '#1d4ed8', '#22d3ee']
@@ -274,11 +273,11 @@ const heatmapChartOption = computed(() => {
             },
         },
         calendar: {
-            top: 42,
+            top: 58,
             left: 'center',
-            bottom: 56,
+            bottom: 18,
             range: [firstDate, lastDate],
-            cellSize: [20, 20],
+            cellSize: [cellWidth, cellHeight],
             itemStyle: {
                 color: isDark.value ? '#111827' : '#f3f4f6',
                 borderWidth: 2,
@@ -288,12 +287,12 @@ const heatmapChartOption = computed(() => {
             dayLabel: {
                 color: axisColor.value,
                 firstDay: 1,
-                margin: 8,
+                margin: 10,
                 nameMap: weekdayNames.value,
             },
             monthLabel: {
                 color: axisColor.value,
-                margin: 12,
+                margin: 16,
                 nameMap: monthNames.value,
             },
             yearLabel: { show: false },
