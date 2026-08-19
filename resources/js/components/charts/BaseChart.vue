@@ -4,7 +4,8 @@
         :option="option"
         :theme="isDark ? 'dark' : undefined"
         :autoresize="autoresize"
-        :class="chartClass"
+        class="w-full min-w-0"
+        :style="{ height: normalizedHeight }"
     />
 </template>
 
@@ -32,17 +33,5 @@ const props = defineProps({
 const { isDark } = useTheme()
 
 const themeKey = computed(() => isDark.value ? 'dark' : 'light')
-const chartClass = computed(() => 'w-full')
+const normalizedHeight = computed(() => typeof props.height === 'number' ? `${props.height}px` : props.height)
 </script>
-
-<style scoped>
-.echarts {
-    min-width: 0;
-}
-</style>
-
-<style scoped>
-:deep(.echarts) {
-    height: v-bind("typeof props.height === 'number' ? `${props.height}px` : props.height");
-}
-</style>
