@@ -13,51 +13,26 @@
             "dashboard": "Дашборд",
             "activity": "Активность",
             "gameLibrary": "Библиотека игр",
-            "gameDetails": "Детали игры",
+            "gameDetails": "Информация об игре",
             "default": "SteamStat"
         },
         "pageSubtitle": "Отслеживайте и анализируйте свою игровую статистику Steam"
     },
-    "activity": {
-        "filters": {
-            "from": "С",
-            "to": "По",
-            "apply": "Применить"
-        },
-        "summary": {
-            "playtime": "Игровое время",
-            "activeDays": "Активные дни",
-            "games": "Игр за период",
-            "average": "Среднее за активный день",
-            "previous": "Предыдущий период: {value}",
-            "periodDays": "Период: {value} дн.",
-            "previousGames": "В прошлом периоде: {value}",
-            "perActiveDay": "Только по дням с активностью"
-        },
-        "daily": {
-            "title": "Активность по дням",
-            "subtitle": "Игровое время внутри выбранного периода"
-        },
-        "records": {
-            "title": "Рекорды периода",
-            "bestDay": "Лучший день",
-            "bestGame": "Самая активная игра",
-            "longestStreak": "Самая длинная серия",
-            "currentStreak": "Текущая серия"
-        },
-        "games": {
-            "title": "Игры за период"
-        },
-        "platforms": {
-            "title": "Платформы"
-        },
-        "heatmap": {
-            "title": "Карта активности",
-            "subtitle": "Чем насыщеннее ячейка, тем больше игрового времени"
-        },
-        "noActivity": "В выбранном периоде игровой активности нет."
-    },
     "dashboard": {
+        "overview": {
+            "trackedActivity": "Отслеживаемая активность",
+            "playtime7d": "Игровое время за 7 дней",
+            "description": "За выбранный период активность зафиксирована в {games} играх и в {days} активных днях.",
+            "activeDays": "Активные дни",
+            "last7Days": "За последние 7 дней",
+            "vsPrevious": "{value} к прошлому периоду",
+            "noPrevious": "Нет данных прошлого периода"
+        },
+        "activity7d": {
+            "title": "Активность за 7 дней",
+            "subtitle": "Фактические изменения счётчиков Steam по дням",
+            "openActivity": "Подробнее"
+        },
         "stats": {
             "totalPlaytime": "Общее время игры",
             "gamesPlayed": "Сыграно игр",
@@ -89,6 +64,45 @@
                 "lastPlayed": "Последний запуск"
             }
         }
+    },
+    "activity": {
+        "filters": {
+            "from": "С",
+            "to": "По",
+            "apply": "Применить"
+        },
+        "summary": {
+            "playtime": "Игровое время",
+            "activeDays": "Активные дни",
+            "games": "Игры",
+            "average": "Среднее",
+            "previous": "Прошлый период: {value}",
+            "periodDays": "Период: {value} дн.",
+            "previousGames": "Прошлый период: {value}",
+            "perActiveDay": "На активный день"
+        },
+        "daily": {
+            "title": "Активность по дням",
+            "subtitle": "Игровое время за выбранный период"
+        },
+        "records": {
+            "title": "Рекорды",
+            "bestDay": "Лучший день",
+            "bestGame": "Самая активная игра",
+            "longestStreak": "Самая длинная серия",
+            "currentStreak": "Текущая серия"
+        },
+        "games": {
+            "title": "Игры за период"
+        },
+        "platforms": {
+            "title": "Платформы"
+        },
+        "heatmap": {
+            "title": "Карта активности",
+            "subtitle": "Интенсивность по дням"
+        },
+        "approximate": "Почасовая статистика приблизительная"
     },
     "library": {
         "title": "Ваша библиотека игр",
