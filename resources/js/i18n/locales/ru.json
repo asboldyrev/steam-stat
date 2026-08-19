@@ -106,12 +106,19 @@
     },
     "library": {
         "title": "Ваша библиотека игр",
+        "overview": {
+            "eyebrow": "Библиотека"
+        },
+        "controls": {
+            "search": "Поиск",
+            "sort": "Сортировка"
+        },
         "totalHours": "{hours} всего часов",
-        "filterPlaceholder": "Фильтр по названию, платформе...",
+        "filterPlaceholder": "Фильтр по названию...",
         "sortBy": {
-            "playtime": "Сортировать по: Времени",
-            "name": "Сортировать по: Названию",
-            "lastPlayed": "Сортировать по: Последнему запуску"
+            "playtime": "По времени",
+            "name": "По названию",
+            "lastPlayed": "По последнему запуску"
         },
         "platformFilters": {
             "all": "Все платформы",
