@@ -2,7 +2,7 @@
     <section class="space-y-6">
         <div class="flex flex-col gap-3 rounded-2xl border border-gray-200/80 bg-white/80 p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900/70 sm:flex-row sm:items-end sm:justify-between">
             <div class="space-y-1.5">
-                <span class="text-sm text-gray-600 dark:text-gray-400">{{ t('activity.filters.period') }}</span>
+                <span class="text-sm text-gray-600 dark:text-gray-400 mr-2">{{ t('activity.filters.period') }}</span>
                 <DateRangePicker v-model="dateRange" />
             </div>
 
@@ -98,222 +98,222 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
-import { useI18n } from 'vue-i18n'
-import BaseChart from '@/components/charts/BaseChart.vue'
-import PageState from '@/components/PageState.vue'
-import DateRangePicker from '@/components/ui/date-range-picker/DateRangePicker.vue'
-import { useApi } from '@/composables/useApi.js'
-import { useDateFormat } from '@/composables/useDateFormat.js'
-import { useTheme } from '@/composables/useTheme.js'
+    import { computed, onMounted, ref } from 'vue'
+    import { useI18n } from 'vue-i18n'
+    import BaseChart from '@/components/charts/BaseChart.vue'
+    import PageState from '@/components/PageState.vue'
+    import DateRangePicker from '@/components/ui/date-range-picker/DateRangePicker.vue'
+    import { useApi } from '@/composables/useApi.js'
+    import { useDateFormat } from '@/composables/useDateFormat.js'
+    import { useTheme } from '@/composables/useTheme.js'
 
-const { t } = useI18n()
-const { isDark } = useTheme()
-const { formatDate, formatShortDate, monthNames, weekdayNames } = useDateFormat()
-const { getActivity, getActivityInsights } = useApi()
+    const { t } = useI18n()
+    const { isDark } = useTheme()
+    const { formatDate, formatShortDate, monthNames, weekdayNames } = useDateFormat()
+    const { getActivity, getActivityInsights } = useApi()
 
-const today = new Date()
-const thirtyDaysAgo = new Date(today)
-thirtyDaysAgo.setDate(today.getDate() - 29)
+    const today = new Date()
+    const thirtyDaysAgo = new Date(today)
+    thirtyDaysAgo.setDate(today.getDate() - 29)
 
-const toDateInput = (date) => {
-    const year = date.getFullYear()
-    const month = String(date.getMonth() + 1).padStart(2, '0')
-    const day = String(date.getDate()).padStart(2, '0')
-    return `${year}-${month}-${day}`
-}
-
-const dateRange = ref({
-    from: toDateInput(thirtyDaysAgo),
-    to: toDateInput(today),
-})
-
-const overview = ref(null)
-const insights = ref(null)
-const loading = ref(false)
-const error = ref('')
-
-const formatMinutes = (minutes) => {
-    if (!minutes) return `0${t('common.hours.short')}`
-    const hours = minutes / 60
-    return `${hours >= 10 ? Math.round(hours) : hours.toFixed(1)}${t('common.hours.short')}`
-}
-
-const load = async () => {
-    loading.value = true
-    error.value = ''
-
-    try {
-        const params = { from: dateRange.value.from, to: dateRange.value.to }
-        const [overviewData, insightsData] = await Promise.all([
-            getActivity(params),
-            getActivityInsights(params),
-        ])
-        overview.value = overviewData
-        insights.value = insightsData
-    } catch (requestError) {
-        error.value = requestError?.response?.data?.message || requestError.message || t('common.error')
-    } finally {
-        loading.value = false
+    const toDateInput = (date) => {
+        const year = date.getFullYear()
+        const month = String(date.getMonth() + 1).padStart(2, '0')
+        const day = String(date.getDate()).padStart(2, '0')
+        return `${year}-${month}-${day}`
     }
-}
 
-const summaryCards = computed(() => {
-    if (!overview.value) return []
+    const dateRange = ref({
+        from: toDateInput(thirtyDaysAgo),
+        to: toDateInput(today),
+    })
 
-    return [
-        {
-            label: t('activity.summary.playtime'),
-            value: formatMinutes(overview.value.summary.total_minutes),
-            hint: t('activity.summary.previous', { value: formatMinutes(overview.value.previous.total_minutes) }),
-        },
-        {
-            label: t('activity.summary.activeDays'),
-            value: overview.value.summary.active_days,
-            hint: t('activity.summary.periodDays', { value: overview.value.period.days }),
-        },
-        {
-            label: t('activity.summary.games'),
-            value: overview.value.summary.games_count,
-            hint: t('activity.summary.previousGames', { value: overview.value.previous.games_count }),
-        },
-        {
-            label: t('activity.summary.average'),
-            value: formatMinutes(overview.value.summary.average_minutes_per_active_day),
-            hint: t('activity.summary.perActiveDay'),
-        },
-    ]
-})
+    const overview = ref(null)
+    const insights = ref(null)
+    const loading = ref(false)
+    const error = ref('')
 
-const axisColor = computed(() => isDark.value ? '#9ca3af' : '#6b7280')
-const splitColor = computed(() => isDark.value ? '#374151' : '#e5e7eb')
-const maxGameMinutes = computed(() => Math.max(1, ...(overview.value?.games || []).map((game) => game.minutes)))
-const hasDailyActivity = computed(() => (overview.value?.daily || []).some((day) => Number(day.minutes) > 0))
+    const formatMinutes = (minutes) => {
+        if (!minutes) return `0${t('common.hours.short')}`
+        const hours = minutes / 60
+        return `${hours >= 10 ? Math.round(hours) : hours.toFixed(1)}${t('common.hours.short')}`
+    }
 
-const dailyChartOption = computed(() => ({
-    backgroundColor: 'transparent',
-    animationDuration: 350,
-    grid: { left: 12, right: 12, top: 20, bottom: 24, containLabel: true },
-    tooltip: {
-        trigger: 'axis',
-        formatter: (items) => {
-            const item = items?.[0]
-            return item ? `${item.axisValue}<br/>${formatMinutes(item.value)}` : ''
-        },
-    },
-    xAxis: {
-        type: 'category',
-        data: (overview.value?.daily || []).map((day) => formatShortDate(day.date)),
-        axisLine: { lineStyle: { color: splitColor.value } },
-        axisTick: { show: false },
-        axisLabel: { color: axisColor.value, hideOverlap: true },
-    },
-    yAxis: {
-        type: 'value',
-        minInterval: 1,
-        axisLabel: { color: axisColor.value, formatter: (value) => formatMinutes(value) },
-        splitLine: { lineStyle: { color: splitColor.value } },
-    },
-    series: [{
-        type: 'bar',
-        data: (overview.value?.daily || []).map((day) => day.minutes),
-        barMaxWidth: 34,
-        itemStyle: { color: '#3b82f6', borderRadius: [7, 7, 2, 2] },
-        emphasis: { itemStyle: { color: '#06b6d4' } },
-    }],
-}))
+    const load = async () => {
+        loading.value = true
+        error.value = ''
 
-const platformChartOption = computed(() => ({
-    backgroundColor: 'transparent',
-    tooltip: {
-        trigger: 'item',
-        formatter: ({ name, value, percent }) => `${name}<br/>${formatMinutes(value)} · ${percent}%`,
-    },
-    legend: {
-        bottom: 0,
-        textStyle: { color: axisColor.value },
-    },
-    series: [{
-        type: 'pie',
-        radius: ['48%', '72%'],
-        center: ['50%', '43%'],
-        avoidLabelOverlap: true,
-        padAngle: 2,
-        itemStyle: { borderRadius: 6 },
-        label: { show: false },
-        data: (overview.value?.platforms || []).map((platform) => ({
-            name: platform.name,
-            value: platform.minutes,
-        })),
-    }],
-}))
+        try {
+            const params = { from: dateRange.value.from, to: dateRange.value.to }
+            const [overviewData, insightsData] = await Promise.all([
+                getActivity(params),
+                getActivityInsights(params),
+            ])
+            overview.value = overviewData
+            insights.value = insightsData
+        } catch (requestError) {
+            error.value = requestError?.response?.data?.message || requestError.message || t('common.error')
+        } finally {
+            loading.value = false
+        }
+    }
 
-const heatmapChartOption = computed(() => {
-    const data = (insights.value?.heatmap || []).map((day) => [day.date, day.minutes])
-    const maxMinutes = Math.max(1, ...data.map((item) => Number(item[1]) || 0))
-    const firstDate = data[0]?.[0] || dateRange.value.from
-    const lastDate = data[data.length - 1]?.[0] || dateRange.value.to
-    const days = Math.max(1, data.length)
-    const cellWidth = days <= 45 ? 44 : days <= 100 ? 34 : days <= 190 ? 24 : 18
-    const cellHeight = days <= 100 ? 28 : days <= 190 ? 24 : 18
+    const summaryCards = computed(() => {
+        if (!overview.value) return []
 
-    return {
+        return [
+            {
+                label: t('activity.summary.playtime'),
+                value: formatMinutes(overview.value.summary.total_minutes),
+                hint: t('activity.summary.previous', { value: formatMinutes(overview.value.previous.total_minutes) }),
+            },
+            {
+                label: t('activity.summary.activeDays'),
+                value: overview.value.summary.active_days,
+                hint: t('activity.summary.periodDays', { value: overview.value.period.days }),
+            },
+            {
+                label: t('activity.summary.games'),
+                value: overview.value.summary.games_count,
+                hint: t('activity.summary.previousGames', { value: overview.value.previous.games_count }),
+            },
+            {
+                label: t('activity.summary.average'),
+                value: formatMinutes(overview.value.summary.average_minutes_per_active_day),
+                hint: t('activity.summary.perActiveDay'),
+            },
+        ]
+    })
+
+    const axisColor = computed(() => isDark.value ? '#9ca3af' : '#6b7280')
+    const splitColor = computed(() => isDark.value ? '#374151' : '#e5e7eb')
+    const maxGameMinutes = computed(() => Math.max(1, ...(overview.value?.games || []).map((game) => game.minutes)))
+    const hasDailyActivity = computed(() => (overview.value?.daily || []).some((day) => Number(day.minutes) > 0))
+
+    const dailyChartOption = computed(() => ({
         backgroundColor: 'transparent',
+        animationDuration: 350,
+        grid: { left: 12, right: 12, top: 20, bottom: 24, containLabel: true },
         tooltip: {
-            formatter: ({ value }) => `${formatDate(value?.[0])}<br/>${formatMinutes(value?.[1] || 0)}`,
-        },
-        visualMap: {
-            show: false,
-            min: 0,
-            max: maxMinutes,
-            inRange: {
-                color: isDark.value
-                    ? ['#1f2937', '#1d4ed8', '#22d3ee']
-                    : ['#eff6ff', '#60a5fa', '#0891b2'],
+            trigger: 'axis',
+            formatter: (items) => {
+                const item = items?.[0]
+                return item ? `${item.axisValue}<br/>${formatMinutes(item.value)}` : ''
             },
         },
-        calendar: {
-            top: 58,
-            left: 'center',
-            bottom: 18,
-            range: [firstDate, lastDate],
-            cellSize: [cellWidth, cellHeight],
-            itemStyle: {
-                color: isDark.value ? '#111827' : '#f3f4f6',
-                borderWidth: 2,
-                borderColor: isDark.value ? '#111827' : '#ffffff',
-            },
-            splitLine: { show: false },
-            dayLabel: {
-                color: axisColor.value,
-                firstDay: 1,
-                margin: 10,
-                nameMap: weekdayNames.value,
-            },
-            monthLabel: {
-                color: axisColor.value,
-                margin: 16,
-                nameMap: monthNames.value,
-            },
-            yearLabel: { show: false },
+        xAxis: {
+            type: 'category',
+            data: (overview.value?.daily || []).map((day) => formatShortDate(day.date)),
+            axisLine: { lineStyle: { color: splitColor.value } },
+            axisTick: { show: false },
+            axisLabel: { color: axisColor.value, hideOverlap: true },
+        },
+        yAxis: {
+            type: 'value',
+            minInterval: 1,
+            axisLabel: { color: axisColor.value, formatter: (value) => formatMinutes(value) },
+            splitLine: { lineStyle: { color: splitColor.value } },
         },
         series: [{
-            type: 'heatmap',
-            coordinateSystem: 'calendar',
-            data,
+            type: 'bar',
+            data: (overview.value?.daily || []).map((day) => day.minutes),
+            barMaxWidth: 34,
+            itemStyle: { color: '#3b82f6', borderRadius: [7, 7, 2, 2] },
+            emphasis: { itemStyle: { color: '#06b6d4' } },
         }],
-    }
-})
+    }))
 
-const bestDay = computed(() => {
-    const value = insights.value?.records?.best_day
-    return value ? `${formatDate(value.date)} · ${formatMinutes(value.minutes)}` : '—'
-})
+    const platformChartOption = computed(() => ({
+        backgroundColor: 'transparent',
+        tooltip: {
+            trigger: 'item',
+            formatter: ({ name, value, percent }) => `${name}<br/>${formatMinutes(value)} · ${percent}%`,
+        },
+        legend: {
+            bottom: 0,
+            textStyle: { color: axisColor.value },
+        },
+        series: [{
+            type: 'pie',
+            radius: ['48%', '72%'],
+            center: ['50%', '43%'],
+            avoidLabelOverlap: true,
+            padAngle: 2,
+            itemStyle: { borderRadius: 6 },
+            label: { show: false },
+            data: (overview.value?.platforms || []).map((platform) => ({
+                name: platform.name,
+                value: platform.minutes,
+            })),
+        }],
+    }))
 
-const bestGame = computed(() => {
-    const value = insights.value?.records?.best_game
-    return value ? `${value.name} · ${formatMinutes(value.minutes)}` : '—'
-})
+    const heatmapChartOption = computed(() => {
+        const data = (insights.value?.heatmap || []).map((day) => [day.date, day.minutes])
+        const maxMinutes = Math.max(1, ...data.map((item) => Number(item[1]) || 0))
+        const firstDate = data[0]?.[0] || dateRange.value.from
+        const lastDate = data[data.length - 1]?.[0] || dateRange.value.to
+        const days = Math.max(1, data.length)
+        const cellWidth = days <= 45 ? 44 : days <= 100 ? 34 : days <= 190 ? 24 : 18
+        const cellHeight = days <= 100 ? 28 : days <= 190 ? 24 : 18
 
-onMounted(load)
+        return {
+            backgroundColor: 'transparent',
+            tooltip: {
+                formatter: ({ value }) => `${formatDate(value?.[0])}<br/>${formatMinutes(value?.[1] || 0)}`,
+            },
+            visualMap: {
+                show: false,
+                min: 0,
+                max: maxMinutes,
+                inRange: {
+                    color: isDark.value
+                        ? ['#1f2937', '#1d4ed8', '#22d3ee']
+                        : ['#eff6ff', '#60a5fa', '#0891b2'],
+                },
+            },
+            calendar: {
+                top: 58,
+                left: 'center',
+                bottom: 18,
+                range: [firstDate, lastDate],
+                cellSize: [cellWidth, cellHeight],
+                itemStyle: {
+                    color: isDark.value ? '#111827' : '#f3f4f6',
+                    borderWidth: 2,
+                    borderColor: isDark.value ? '#111827' : '#ffffff',
+                },
+                splitLine: { show: false },
+                dayLabel: {
+                    color: axisColor.value,
+                    firstDay: 1,
+                    margin: 10,
+                    nameMap: weekdayNames.value,
+                },
+                monthLabel: {
+                    color: axisColor.value,
+                    margin: 16,
+                    nameMap: monthNames.value,
+                },
+                yearLabel: { show: false },
+            },
+            series: [{
+                type: 'heatmap',
+                coordinateSystem: 'calendar',
+                data,
+            }],
+        }
+    })
+
+    const bestDay = computed(() => {
+        const value = insights.value?.records?.best_day
+        return value ? `${formatDate(value.date)} · ${formatMinutes(value.minutes)}` : '—'
+    })
+
+    const bestGame = computed(() => {
+        const value = insights.value?.records?.best_game
+        return value ? `${value.name} · ${formatMinutes(value.minutes)}` : '—'
+    })
+
+    onMounted(load)
 </script>
