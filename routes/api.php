@@ -1,9 +1,12 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\ActivityController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\GameController;
 use App\Http\Controllers\Api\SyncController;
+
+Route::get('/activity', [ActivityController::class, 'index']);
 
 Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
 Route::get('/dashboard/platform-distribution', [DashboardController::class, 'platformDistribution']);
