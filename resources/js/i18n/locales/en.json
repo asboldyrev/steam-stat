@@ -107,12 +107,19 @@
     },
     "library": {
         "title": "Your Game Library",
+        "overview": {
+            "eyebrow": "Library"
+        },
+        "controls": {
+            "search": "Search",
+            "sort": "Sort"
+        },
         "totalHours": "{hours} total hours",
-        "filterPlaceholder": "Filter by name, platform...",
+        "filterPlaceholder": "Filter by game name...",
         "sortBy": {
-            "playtime": "Sort by: Playtime",
-            "name": "Sort by: Name",
-            "lastPlayed": "Sort by: Last Played"
+            "playtime": "By playtime",
+            "name": "By name",
+            "lastPlayed": "By last played"
         },
         "platformFilters": {
             "all": "All Platforms",
