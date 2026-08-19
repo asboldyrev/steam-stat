@@ -76,6 +76,41 @@ final class ActivityControllerTest extends TestCase
             ->assertJsonPath('games.0.game_id', $first->id);
     }
 
+    public function test_activity_insights_returns_heatmap_distribution_and_records(): void
+    {
+        config(['steam-stat.timezone' => 'UTC']);
+
+        $game = Game::query()->create([
+            'app_id' => 10,
+            'name' => 'Game One',
+            'icon_url' => null,
+            'has_community_visible_stats' => true,
+        ]);
+
+        $this->snapshot($game->id, '2026-08-17 12:00:00', 30, 30, 0, 0);
+        $this->snapshot($game->id, '2026-08-18 12:00:00', 60, 60, 0, 0);
+        $this->snapshot($game->id, '2026-08-19 12:00:00', 90, 90, 0, 0);
+
+        $response = $this->getJson('/api/activity/insights?from=2026-08-17&to=2026-08-19');
+
+        $response->assertOk()
+            ->assertJsonCount(3, 'heatmap')
+            ->assertJsonPath('heatmap.0.date', '2026-08-17')
+            ->assertJsonPath('heatmap.0.minutes', 30)
+            ->assertJsonCount(7, 'weekdays')
+            ->assertJsonPath('weekdays.0.name', 'Monday')
+            ->assertJsonPath('weekdays.0.minutes', 30)
+            ->assertJsonCount(24, 'hours')
+            ->assertJsonPath('hours.12.minutes', 180)
+            ->assertJsonPath('records.best_day.date', '2026-08-19')
+            ->assertJsonPath('records.best_day.minutes', 90)
+            ->assertJsonPath('records.best_game.game_id', $game->id)
+            ->assertJsonPath('records.best_game.minutes', 180)
+            ->assertJsonPath('records.longest_streak_days', 3)
+            ->assertJsonPath('records.current_streak_days', 3)
+            ->assertJsonPath('hourly_approximate', true);
+    }
+
     public function test_activity_period_validation_rejects_invalid_range(): void
     {
         $this->getJson('/api/activity?from=2026-08-20&to=2026-08-19')
