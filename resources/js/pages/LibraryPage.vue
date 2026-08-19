@@ -56,36 +56,55 @@
             :empty="true"
         />
 
-        <section v-else class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+        <section v-else class="grid gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
             <RouterLink
                 v-for="game in games"
                 :key="game.id"
                 :to="`/game/${game.id}`"
-                class="group overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg dark:border-gray-800 dark:bg-gray-900"
+                class="group overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-lg dark:border-gray-800 dark:bg-gray-900 dark:hover:border-blue-900"
             >
-                <div class="relative aspect-[16/8] overflow-hidden bg-gray-100 dark:bg-gray-800">
+                <div class="relative aspect-[460/215] overflow-hidden bg-gray-100 dark:bg-gray-800">
                     <img
-                        v-if="game.icon_url && !game.iconError"
-                        :src="game.icon_url"
+                        v-if="game.cover_url && !game.coverError"
+                        :src="game.cover_url"
                         :alt="game.name"
-                        class="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
-                        @error="game.iconError = true"
+                        class="h-full w-full object-cover transition duration-300 group-hover:scale-[1.015]"
+                        loading="lazy"
+                        @error="game.coverError = true"
                     />
-                    <div v-else :class="game.gradient" class="flex h-full w-full items-center justify-center text-4xl font-black text-white">
-                        {{ game.abbreviation }}
-                    </div>
-                    <div class="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/70 to-transparent" />
-                    <div class="absolute bottom-3 left-4 right-4 flex items-end justify-between gap-3 text-white">
-                        <p class="min-w-0 truncate text-base font-bold">{{ game.name }}</p>
-                        <span class="shrink-0 rounded-full bg-black/35 px-2.5 py-1 text-xs font-semibold backdrop-blur">
-                            {{ game.total_time }}{{ t('common.hours.short') }}
-                        </span>
+
+                    <div
+                        v-else
+                        :class="game.gradient"
+                        class="flex h-full w-full items-center justify-center"
+                    >
+                        <img
+                            v-if="game.icon_url && !game.iconError"
+                            :src="game.icon_url"
+                            :alt="game.name"
+                            class="h-16 w-16 rounded-2xl object-contain shadow-lg ring-1 ring-white/20"
+                            @error="game.iconError = true"
+                        />
+                        <span v-else class="text-4xl font-black text-white/95">{{ game.abbreviation }}</span>
                     </div>
                 </div>
 
-                <div class="p-4">
-                    <div class="flex items-center justify-between gap-3">
-                        <div class="flex flex-wrap gap-1.5">
+                <div class="p-4 sm:p-5">
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="min-w-0">
+                            <h3 class="truncate text-base font-bold text-gray-950 dark:text-white">{{ game.name }}</h3>
+                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                {{ t('library.gameCard.lastPlayed') }}: {{ formatLastPlayed(game.last_played) }}
+                            </p>
+                        </div>
+
+                        <span class="shrink-0 rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 dark:bg-blue-950/50 dark:text-blue-300">
+                            {{ game.total_time }}{{ t('common.hours.short') }}
+                        </span>
+                    </div>
+
+                    <div class="mt-4 flex items-center justify-between gap-3 border-t border-gray-100 pt-4 dark:border-gray-800">
+                        <div class="flex min-w-0 flex-wrap gap-1.5">
                             <span
                                 v-for="platform in activePlatforms(game)"
                                 :key="platform"
@@ -94,12 +113,11 @@
                                 {{ platform }}
                             </span>
                         </div>
-                        <span class="text-xs font-semibold text-blue-600 dark:text-blue-400">{{ t('library.gameCard.viewDetails') }}</span>
-                    </div>
 
-                    <p class="mt-4 text-xs text-gray-500 dark:text-gray-400">
-                        {{ t('library.gameCard.lastPlayed') }}: {{ formatLastPlayed(game.last_played) }}
-                    </p>
+                        <span class="shrink-0 text-xs font-semibold text-blue-600 transition group-hover:text-blue-700 dark:text-blue-400 dark:group-hover:text-blue-300">
+                            {{ t('library.gameCard.viewDetails') }}
+                        </span>
+                    </div>
                 </div>
             </RouterLink>
         </section>
@@ -172,7 +190,11 @@ const fetchGames = async () => {
         if (searchQuery.value.trim()) params.search = searchQuery.value.trim()
 
         const response = await getGames(params)
-        games.value = (response.games || []).map((game) => ({ ...game, iconError: false }))
+        games.value = (response.games || []).map((game) => ({
+            ...game,
+            coverError: false,
+            iconError: false,
+        }))
     } catch (requestError) {
         error.value = requestError?.response?.data?.message || requestError.message || t('common.error')
     } finally {
