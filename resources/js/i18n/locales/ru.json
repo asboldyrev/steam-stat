@@ -4,15 +4,58 @@
         "appTagline": "Отслеживайте свои игры",
         "menu": {
             "dashboard": "Дашборд",
+            "activity": "Активность",
             "gameLibrary": "Библиотека игр"
         },
         "lastSync": "Последняя синхронизация: {time}",
         "syncButton": "Синхронизировать",
         "pageTitle": {
             "dashboard": "Дашборд",
-            "gameLibrary": "Библиотека игр"
+            "activity": "Активность",
+            "gameLibrary": "Библиотека игр",
+            "gameDetails": "Детали игры",
+            "default": "SteamStat"
         },
         "pageSubtitle": "Отслеживайте и анализируйте свою игровую статистику Steam"
+    },
+    "activity": {
+        "filters": {
+            "from": "С",
+            "to": "По",
+            "apply": "Применить"
+        },
+        "summary": {
+            "playtime": "Игровое время",
+            "activeDays": "Активные дни",
+            "games": "Игр за период",
+            "average": "Среднее за активный день",
+            "previous": "Предыдущий период: {value}",
+            "periodDays": "Период: {value} дн.",
+            "previousGames": "В прошлом периоде: {value}",
+            "perActiveDay": "Только по дням с активностью"
+        },
+        "daily": {
+            "title": "Активность по дням",
+            "subtitle": "Игровое время внутри выбранного периода"
+        },
+        "records": {
+            "title": "Рекорды периода",
+            "bestDay": "Лучший день",
+            "bestGame": "Самая активная игра",
+            "longestStreak": "Самая длинная серия",
+            "currentStreak": "Текущая серия"
+        },
+        "games": {
+            "title": "Игры за период"
+        },
+        "platforms": {
+            "title": "Платформы"
+        },
+        "heatmap": {
+            "title": "Карта активности",
+            "subtitle": "Чем насыщеннее ячейка, тем больше игрового времени"
+        },
+        "noActivity": "В выбранном периоде игровой активности нет."
     },
     "dashboard": {
         "stats": {
