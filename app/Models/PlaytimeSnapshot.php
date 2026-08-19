@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Casts\UtcImmutableDateTime;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -31,8 +32,8 @@ final class PlaytimeSnapshot extends Model
     protected function casts(): array
     {
         return [
-            'captured_at' => 'immutable_datetime',
-            'last_played_at' => 'immutable_datetime',
+            'captured_at' => UtcImmutableDateTime::class,
+            'last_played_at' => UtcImmutableDateTime::class,
             'has_counter_correction' => 'boolean',
         ];
     }
