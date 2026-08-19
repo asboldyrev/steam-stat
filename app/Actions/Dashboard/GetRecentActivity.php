@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions\Dashboard;
 
+use App\Dto\Dashboard\RecentActivityDto;
 use App\Models\GameStat;
 use App\Support\Games\GameNameAbbreviator;
 use App\Support\Games\GamePlatformDetector;
@@ -11,9 +12,11 @@ use Illuminate\Support\Facades\DB;
 
 final class GetRecentActivity
 {
+    /**
+     * @return list<RecentActivityDto>
+     */
     public function execute(): array
     {
-        // Получаем последние записи по last_played_at, группируем по game_id
         $latestStats = GameStat::query()
             ->select('game_id', DB::raw('MAX(last_played_at) as last_played'))
             ->whereNotNull('last_played_at')
@@ -21,10 +24,6 @@ final class GetRecentActivity
             ->orderByDesc('last_played')
             ->limit(3)
             ->get();
-
-        if ($latestStats->isEmpty()) {
-            return [];
-        }
 
         $activities = [];
         $gradients = [
@@ -38,30 +37,27 @@ final class GetRecentActivity
 
         foreach ($latestStats as $index => $stat) {
             $gameStat = GameStat::query()
+                ->with('game')
                 ->where('game_id', $stat->game_id)
                 ->where('last_played_at', $stat->last_played)
                 ->first();
 
-            if (!$gameStat) {
+            if ($gameStat === null || $gameStat->game === null || $gameStat->last_played_at === null) {
                 continue;
             }
 
             $game = $gameStat->game;
-            $abbreviation = GameNameAbbreviator::generateAbbreviation($game->name);
-            $durationMinutes = (int) round($gameStat->delta_total_minutes);
-            $platform = GamePlatformDetector::determinePlatform($gameStat);
-            $gradient = $gradients[$index % count($gradients)];
 
-            $activities[] = [
-                'game_id' => $game->id,
-                'game_name' => $game->name,
-                'abbreviation' => $abbreviation,
-                'icon_url' => $game->iconUrlLarge(),
-                'duration_minutes' => $durationMinutes,
-                'platform' => $platform,
-                'last_played' => $gameStat->last_played_at->timestamp,
-                'gradient' => $gradient,
-            ];
+            $activities[] = new RecentActivityDto(
+                gameId: $game->id,
+                gameName: $game->name,
+                abbreviation: GameNameAbbreviator::generateAbbreviation($game->name),
+                iconUrl: $game->iconUrlLarge(),
+                durationMinutes: max(0, (int) $gameStat->delta_total_minutes),
+                platform: GamePlatformDetector::determinePlatform($gameStat),
+                lastPlayed: $gameStat->last_played_at->timestamp,
+                gradient: $gradients[$index % count($gradients)],
+            );
         }
 
         return $activities;
