@@ -14,8 +14,18 @@ class Game extends Model
         'app_id',
         'name',
         'icon_url',
+        'cover_url',
         'has_community_visible_stats',
+        'store_metadata_synced_at',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'has_community_visible_stats' => 'boolean',
+            'store_metadata_synced_at' => 'immutable_datetime',
+        ];
+    }
 
     public function gameStats(): HasMany
     {
@@ -50,12 +60,9 @@ class Game extends Model
         );
     }
 
-    public function coverUrl(): string
+    public function coverUrl(): ?string
     {
-        return sprintf(
-            'https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/%d/header.jpg',
-            $this->app_id,
-        );
+        return $this->cover_url;
     }
 
     public function storeUrl(): string
