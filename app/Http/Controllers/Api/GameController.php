@@ -14,9 +14,6 @@ use Illuminate\Support\Facades\DB;
 
 final class GameController extends Controller
 {
-    /**
-     * Возвращает список игр с фильтрацией.
-     */
     public function index(Request $request): JsonResponse
     {
         $search = $request->query('search');
@@ -115,13 +112,9 @@ final class GameController extends Controller
         return response()->json(['games' => $games]);
     }
 
-    /**
-     * Возвращает детали игры.
-     */
     public function show(Game $game): JsonResponse
     {
         $latestStat = $game->gameStats()->latest('date')->first();
-
         $totalPlaytimeHours = $latestStat ? (int) round($latestStat->total_minutes / 60) : 0;
 
         return response()->json([
@@ -137,9 +130,6 @@ final class GameController extends Controller
         ]);
     }
 
-    /**
-     * Возвращает распределение по платформам для конкретной игры.
-     */
     public function platformBreakdown(Game $game): JsonResponse
     {
         $latestStat = $game->gameStats()->latest('date')->first();
@@ -153,50 +143,14 @@ final class GameController extends Controller
         $macMinutes = $latestStat->mac_minutes;
         $deckMinutes = $latestStat->deck_minutes;
         $disconnectedMinutes = $latestStat->disconnected_minutes;
-
         $linuxDesktopMinutes = max(0, $linuxMinutes - $deckMinutes);
 
         $platforms = [];
-        if ($windowsMinutes > 0) {
-            $platforms[] = [
-                'name' => 'Windows',
-                'hours' => (int) round($windowsMinutes / 60),
-                'percentage' => 0,
-                'color' => 'bg-blue-500',
-            ];
-        }
-        if ($deckMinutes > 0) {
-            $platforms[] = [
-                'name' => 'Steam Deck',
-                'hours' => (int) round($deckMinutes / 60),
-                'percentage' => 0,
-                'color' => 'bg-green-500',
-            ];
-        }
-        if ($linuxDesktopMinutes > 0) {
-            $platforms[] = [
-                'name' => 'Linux',
-                'hours' => (int) round($linuxDesktopMinutes / 60),
-                'percentage' => 0,
-                'color' => 'bg-purple-500',
-            ];
-        }
-        if ($macMinutes > 0) {
-            $platforms[] = [
-                'name' => 'macOS',
-                'hours' => (int) round($macMinutes / 60),
-                'percentage' => 0,
-                'color' => 'bg-orange-500',
-            ];
-        }
-        if ($disconnectedMinutes > 0) {
-            $platforms[] = [
-                'name' => 'Offline',
-                'hours' => (int) round($disconnectedMinutes / 60),
-                'percentage' => 0,
-                'color' => 'bg-gray-500',
-            ];
-        }
+        if ($windowsMinutes > 0) $platforms[] = ['name' => 'Windows', 'hours' => (int) round($windowsMinutes / 60), 'percentage' => 0, 'color' => 'bg-blue-500'];
+        if ($deckMinutes > 0) $platforms[] = ['name' => 'Steam Deck', 'hours' => (int) round($deckMinutes / 60), 'percentage' => 0, 'color' => 'bg-green-500'];
+        if ($linuxDesktopMinutes > 0) $platforms[] = ['name' => 'Linux', 'hours' => (int) round($linuxDesktopMinutes / 60), 'percentage' => 0, 'color' => 'bg-purple-500'];
+        if ($macMinutes > 0) $platforms[] = ['name' => 'macOS', 'hours' => (int) round($macMinutes / 60), 'percentage' => 0, 'color' => 'bg-orange-500'];
+        if ($disconnectedMinutes > 0) $platforms[] = ['name' => 'Offline', 'hours' => (int) round($disconnectedMinutes / 60), 'percentage' => 0, 'color' => 'bg-gray-500'];
 
         $totalMinutes = $windowsMinutes + $linuxDesktopMinutes + $macMinutes + $deckMinutes + $disconnectedMinutes;
         if ($totalMinutes > 0) {
@@ -210,27 +164,19 @@ final class GameController extends Controller
         return response()->json(['platforms' => $platforms]);
     }
 
-    /**
-     * Возвращает историю игрового времени за последние 7 дней.
-     */
     public function playtimeHistory(Game $game): JsonResponse
     {
-        $stats = $game->gameStats()
-            ->orderBy('date', 'asc')
-            ->limit(7)
-            ->get();
+        $stats = $game->gameStats()->orderBy('date', 'asc')->limit(7)->get();
 
         if ($stats->isEmpty()) {
             return response()->json(['history' => []]);
         }
 
         $maxMinutes = $stats->max('delta_total_minutes');
-
         $history = [];
         foreach ($stats as $stat) {
             $platform = $this->determinePlatform($stat);
             $color = $this->platformColor($platform);
-
             $minutes = $stat->delta_total_minutes;
             $percentage = $maxMinutes > 0 ? (int) round(($minutes / $maxMinutes) * 100) : 0;
 
@@ -259,9 +205,7 @@ final class GameController extends Controller
             if ($firstChar !== '' && preg_match('/[A-Za-z]/u', $firstChar)) {
                 $abbr .= mb_strtoupper($firstChar, 'UTF-8');
             }
-            if (mb_strlen($abbr, 'UTF-8') >= 3) {
-                break;
-            }
+            if (mb_strlen($abbr, 'UTF-8') >= 3) break;
         }
 
         return mb_strlen($abbr, 'UTF-8') > 0 ? $abbr : '???';
