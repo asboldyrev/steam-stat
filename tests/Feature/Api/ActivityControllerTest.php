@@ -25,7 +25,7 @@ final class ActivityControllerTest extends TestCase
             'has_community_visible_stats' => true,
         ]);
 
-        $this->snapshot($game->id, '2026-08-15 12:00:00', 30, 30, 0, 0);
+        $this->snapshot($game->id, '2026-08-17 12:00:00', 30, 30, 0, 0);
         $this->snapshot($game->id, '2026-08-18 12:00:00', 60, 40, 20, 10);
         $this->snapshot($game->id, '2026-08-19 12:00:00', 90, 30, 60, 20);
 
