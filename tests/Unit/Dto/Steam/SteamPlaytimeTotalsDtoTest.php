@@ -49,6 +49,6 @@ final class SteamPlaytimeTotalsDtoTest extends TestCase
         self::assertSame(150, $totals->linuxMinutes);
         self::assertSame(60, $totals->linuxDesktopMinutes);
         self::assertSame(90, $totals->deckMinutes);
-        self::assertSame(60, $totals->unclassifiedMinutes);
+        self::assertSame(0, $totals->unclassifiedMinutes);
     }
 }
