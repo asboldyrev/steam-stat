@@ -23,16 +23,18 @@ final class SteamStatsSyncService
 
     public function sync(?CarbonImmutable $capturedAt = null): void
     {
-        $capturedAt ??= CarbonImmutable::now();
-        $dateString = $capturedAt->toDateString();
+        $timezone = (string) config('steam-stat.timezone', config('app.timezone', 'UTC'));
+        $activityAt = $capturedAt?->setTimezone($timezone) ?? CarbonImmutable::now($timezone);
+        $capturedAtUtc = $activityAt->utc();
+        $dateString = $activityAt->toDateString();
 
         $games = $this->steamApi->getPlayedGames();
         $totals = SteamPlaytimeTotalsDto::fromGames($games);
 
-        DB::transaction(function () use ($games, $totals, $capturedAt, $dateString): void {
+        DB::transaction(function () use ($games, $totals, $capturedAtUtc, $dateString): void {
             $databaseGames = $this->syncGames($games);
 
-            $this->syncPlaytimeSnapshots($games, $databaseGames, $capturedAt);
+            $this->syncPlaytimeSnapshots($games, $databaseGames, $capturedAtUtc);
             $this->syncLegacyGameStats($games, $databaseGames, $dateString);
             $this->syncLegacySummaryStats($totals, $dateString);
         });
