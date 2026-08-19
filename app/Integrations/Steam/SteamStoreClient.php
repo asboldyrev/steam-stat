@@ -30,11 +30,17 @@ final class SteamStoreClient
             return null;
         }
 
+        // Prefer large artwork. capsule_image/capsule_imagev5 are intentionally last:
+        // they are small store capsules and become visibly blurry on desktop cards.
         $coverUrl = $this->firstString($data, [
-            'capsule_imagev5',
-            'capsule_image',
             'header_image',
-        ]);
+            'background_raw',
+            'background',
+        ]) ?? $this->firstScreenshot($data)
+            ?? $this->firstString($data, [
+                'capsule_image',
+                'capsule_imagev5',
+            ]);
 
         return [
             'cover_url' => $coverUrl,
@@ -45,7 +51,7 @@ final class SteamStoreClient
     {
         return Http::acceptJson()
             ->timeout(10)
-            ->retry(2, 250, throw: false);
+            ->retry(2, 500, throw: false);
     }
 
     private function firstString(array $data, array $keys): ?string
@@ -54,6 +60,27 @@ final class SteamStoreClient
             $value = $data[$key] ?? null;
             if (is_string($value) && $value !== '') {
                 return $value;
+            }
+        }
+
+        return null;
+    }
+
+    private function firstScreenshot(array $data): ?string
+    {
+        $screenshots = $data['screenshots'] ?? null;
+        if (!is_array($screenshots)) {
+            return null;
+        }
+
+        foreach ($screenshots as $screenshot) {
+            if (!is_array($screenshot)) {
+                continue;
+            }
+
+            $path = $screenshot['path_full'] ?? null;
+            if (is_string($path) && $path !== '') {
+                return $path;
             }
         }
 
