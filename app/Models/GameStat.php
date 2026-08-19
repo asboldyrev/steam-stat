@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Casts\UtcImmutableDateTime;
 use Illuminate\Database\Eloquent\Model;
 
 class GameStat extends Model
@@ -24,9 +25,12 @@ class GameStat extends Model
         'last_played_at',
     ];
 
-    protected $casts = [
-        'last_played_at' => 'datetime',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'last_played_at' => UtcImmutableDateTime::class,
+        ];
+    }
 
     public function game()
     {
