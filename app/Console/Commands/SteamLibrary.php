@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Dto\Steam\SteamGameDto;
+use App\Dto\Steam\SteamPlaytimeTotalsDto;
+use App\Integrations\Steam\SteamApiClient;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
-use App\Data\SteamGameData;
-use App\Services\Steam\SteamApiClient;
 
 #[Signature('steam:library')]
 #[Description('Show Steam library playtime statistics')]
@@ -20,7 +21,7 @@ class SteamLibrary extends Command
     public function handle(SteamApiClient $steam): int
     {
         $games = $steam->getPlayedGames();
-        $totals = $steam->getTotals();
+        $totals = SteamPlaytimeTotalsDto::fromGames($games);
 
         $this->table(
             [
@@ -33,7 +34,7 @@ class SteamLibrary extends Command
                 'Последний запуск',
             ],
             $games
-                ->map(fn(SteamGameData $game): array => [
+                ->map(fn (SteamGameDto $game): array => [
                     $game->appId,
                     $game->name,
                     $this->formatMinutes($game->totalMinutes),
@@ -44,7 +45,6 @@ class SteamLibrary extends Command
                 ])
                 ->all()
         );
-
 
         $this->newLine();
 
