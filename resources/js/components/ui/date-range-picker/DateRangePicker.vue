@@ -1,13 +1,13 @@
 <script setup>
-import { computed } from 'vue'
+import { ref, watch } from 'vue'
 import { parseDate } from '@internationalized/date'
+import { CalendarDays, ChevronLeft, ChevronRight } from '@lucide/vue'
 import { useI18n } from 'vue-i18n'
 import {
     DateRangePickerCalendar,
     DateRangePickerCell,
     DateRangePickerCellTrigger,
     DateRangePickerContent,
-    DateRangePickerField,
     DateRangePickerGrid,
     DateRangePickerGridBody,
     DateRangePickerGridHead,
@@ -15,12 +15,12 @@ import {
     DateRangePickerHeadCell,
     DateRangePickerHeader,
     DateRangePickerHeading,
-    DateRangePickerInput,
     DateRangePickerNext,
     DateRangePickerPrev,
     DateRangePickerRoot,
     DateRangePickerTrigger,
 } from 'reka-ui'
+import { useDateFormat } from '@/composables/useDateFormat.js'
 
 const props = defineProps({
     modelValue: {
@@ -31,55 +31,71 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue'])
 const { locale } = useI18n()
+const { formatPeriod } = useDateFormat()
 
-const rekaLocale = computed(() => locale.value === 'ru' ? 'ru-RU' : 'en-US')
+const toRekaRange = (range) => ({
+    start: range?.from ? parseDate(range.from) : undefined,
+    end: range?.to ? parseDate(range.to) : undefined,
+})
 
-const value = computed({
-    get() {
-        return {
-            start: parseDate(props.modelValue.from),
-            end: parseDate(props.modelValue.to),
+const value = ref(toRekaRange(props.modelValue))
+
+watch(
+    () => props.modelValue,
+    (range) => {
+        const next = toRekaRange(range)
+        if (
+            next.start?.toString() !== value.value?.start?.toString()
+            || next.end?.toString() !== value.value?.end?.toString()
+        ) {
+            value.value = next
         }
     },
-    set(range) {
-        if (!range?.start || !range?.end) return
-        emit('update:modelValue', {
-            from: range.start.toString(),
-            to: range.end.toString(),
-        })
-    },
-})
+    { deep: true },
+)
+
+const updateValue = (range) => {
+    value.value = range
+
+    if (!range?.start || !range?.end) return
+
+    emit('update:modelValue', {
+        from: range.start.toString(),
+        to: range.end.toString(),
+    })
+}
 </script>
 
 <template>
-    <DateRangePickerRoot v-model="value" :locale="rekaLocale" :week-starts-on="1">
-        <DateRangePickerField class="flex min-h-10 items-center gap-1 rounded-xl border border-gray-200 bg-white px-3 text-sm text-gray-900 shadow-sm outline-none transition focus-within:ring-2 focus-within:ring-blue-500/40 dark:border-gray-700 dark:bg-gray-800 dark:text-white">
-            <DateRangePickerInput
-                v-for="item in ['day', 'month', 'year']"
-                :key="`start-${item}`"
-                type="start"
-                :part="item"
-                class="rounded px-0.5 outline-none focus:bg-blue-50 dark:focus:bg-blue-950/50"
-            />
-            <span class="px-1 text-gray-400">—</span>
-            <DateRangePickerInput
-                v-for="item in ['day', 'month', 'year']"
-                :key="`end-${item}`"
-                type="end"
-                :part="item"
-                class="rounded px-0.5 outline-none focus:bg-blue-50 dark:focus:bg-blue-950/50"
-            />
-            <DateRangePickerTrigger class="ml-2 inline-flex h-7 w-7 items-center justify-center rounded-md text-gray-500 transition hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700" aria-label="Open calendar">
-                <span aria-hidden="true">▣</span>
-            </DateRangePickerTrigger>
-        </DateRangePickerField>
+    <DateRangePickerRoot
+        :model-value="value"
+        :locale="locale === 'ru' ? 'ru-RU' : 'en-US'"
+        :week-starts-on="1"
+        :close-on-select="true"
+        @update:model-value="updateValue"
+    >
+        <DateRangePickerTrigger
+            class="inline-flex min-h-10 min-w-[260px] items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white px-3.5 text-sm font-medium text-gray-800 shadow-sm outline-none transition hover:bg-gray-50 focus-visible:ring-2 focus-visible:ring-blue-500/40 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700"
+        >
+            <span>{{ formatPeriod(modelValue.from, modelValue.to) }}</span>
+            <CalendarDays class="h-4 w-4 shrink-0 text-gray-400" />
+        </DateRangePickerTrigger>
 
-        <DateRangePickerContent class="z-50 mt-2 rounded-2xl border border-gray-200 bg-white p-4 shadow-xl outline-none dark:border-gray-700 dark:bg-gray-900">
-            <DateRangePickerCalendar v-slot="{ grid, weekDays }" class="w-full">
+        <DateRangePickerContent
+            side="bottom"
+            :side-offset="8"
+            align="start"
+            class="z-50 rounded-2xl border border-gray-200 bg-white p-4 shadow-xl outline-none dark:border-gray-700 dark:bg-gray-900"
+        >
+            <DateRangePickerCalendar v-slot="{ grid, weekDays }" class="w-[292px]">
                 <DateRangePickerHeader class="mb-3 flex items-center justify-between">
-                    <DateRangePickerPrev class="inline-flex h-8 w-8 items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">‹</DateRangePickerPrev>
+                    <DateRangePickerPrev class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-gray-500 transition hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800">
+                        <ChevronLeft class="h-4 w-4" />
+                    </DateRangePickerPrev>
                     <DateRangePickerHeading class="text-sm font-semibold text-gray-900 dark:text-white" />
-                    <DateRangePickerNext class="inline-flex h-8 w-8 items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800">›</DateRangePickerNext>
+                    <DateRangePickerNext class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-gray-500 transition hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800">
+                        <ChevronRight class="h-4 w-4" />
+                    </DateRangePickerNext>
                 </DateRangePickerHeader>
 
                 <DateRangePickerGrid v-for="month in grid" :key="month.value.toString()" class="w-full border-collapse">
@@ -96,7 +112,7 @@ const value = computed({
                                 <DateRangePickerCellTrigger
                                     :day="date"
                                     :month="month.value"
-                                    class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-sm text-gray-700 outline-none transition hover:bg-blue-50 data-[outside-view]:text-gray-300 data-[selected]:bg-blue-600 data-[selected]:text-white data-[today]:ring-1 data-[today]:ring-blue-500 dark:text-gray-200 dark:hover:bg-blue-950/50 dark:data-[outside-view]:text-gray-600"
+                                    class="inline-flex h-9 w-9 items-center justify-center rounded-lg text-sm text-gray-700 outline-none transition hover:bg-blue-50 data-[outside-view]:text-gray-300 data-[selected]:bg-blue-600 data-[selected]:text-white data-[today]:ring-1 data-[today]:ring-blue-500 dark:text-gray-200 dark:hover:bg-blue-950/50 dark:data-[outside-view]:text-gray-600"
                                 />
                             </DateRangePickerCell>
                         </DateRangePickerGridRow>
