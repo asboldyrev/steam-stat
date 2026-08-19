@@ -1,8 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Game extends Model
 {
@@ -13,17 +17,26 @@ class Game extends Model
         'has_community_visible_stats',
     ];
 
-    public function gameStats()
+    public function gameStats(): HasMany
     {
         return $this->hasMany(GameStat::class);
     }
 
-    public function latestGameStat()
+    public function latestGameStat(): HasOne
     {
-        return $this->hasOne(GameStat::class)->latest('date');
+        return $this->hasOne(GameStat::class)->latestOfMany('date');
     }
 
-    // TODO убрать дубль (SteamGameData)
+    public function playtimeSnapshots(): HasMany
+    {
+        return $this->hasMany(PlaytimeSnapshot::class);
+    }
+
+    public function latestPlaytimeSnapshot(): HasOne
+    {
+        return $this->hasOne(PlaytimeSnapshot::class)->latestOfMany('captured_at');
+    }
+
     public function iconUrlLarge(): ?string
     {
         if ($this->icon_url === null) {
@@ -37,8 +50,7 @@ class Game extends Model
         );
     }
 
-    // TODO убрать дубль (SteamGameData)
-    public function getUrl(): string
+    public function storeUrl(): string
     {
         return 'https://store.steampowered.com/app/' . $this->app_id;
     }
