@@ -4,6 +4,7 @@
         "appTagline": "Track your gaming",
         "menu": {
             "dashboard": "Dashboard",
+            "activity": "Activity",
             "gameLibrary": "Game Library"
         },
         "searchPlaceholder": "Search games...",
@@ -11,11 +12,51 @@
         "syncButton": "Sync Now",
         "pageTitle": {
             "dashboard": "Dashboard",
+            "activity": "Activity",
             "gameLibrary": "Game Library",
             "gameDetails": "Game Details",
             "default": "SteamStat"
         },
         "pageSubtitle": "Track and analyze your Steam gaming statistics"
+    },
+    "activity": {
+        "filters": {
+            "from": "From",
+            "to": "To",
+            "apply": "Apply"
+        },
+        "summary": {
+            "playtime": "Playtime",
+            "activeDays": "Active days",
+            "games": "Games in period",
+            "average": "Average per active day",
+            "previous": "Previous period: {value}",
+            "periodDays": "Period: {value} days",
+            "previousGames": "Previous period: {value}",
+            "perActiveDay": "Calculated from active days only"
+        },
+        "daily": {
+            "title": "Daily activity",
+            "subtitle": "Playtime within the selected period"
+        },
+        "records": {
+            "title": "Period records",
+            "bestDay": "Best day",
+            "bestGame": "Most active game",
+            "longestStreak": "Longest streak",
+            "currentStreak": "Current streak"
+        },
+        "games": {
+            "title": "Games in period"
+        },
+        "platforms": {
+            "title": "Platforms"
+        },
+        "heatmap": {
+            "title": "Activity heatmap",
+            "subtitle": "Darker cells represent more playtime"
+        },
+        "noActivity": "There is no gaming activity in the selected period."
     },
     "dashboard": {
         "stats": {
