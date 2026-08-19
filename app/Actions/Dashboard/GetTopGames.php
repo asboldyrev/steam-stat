@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Actions\Dashboard;
 
+use App\Dto\Dashboard\TopGameDto;
 use App\Queries\GameStats\GetLatestGameStats;
 
 final class GetTopGames
@@ -12,10 +13,12 @@ final class GetTopGames
         private readonly GetLatestGameStats $latestGameStats,
     ) {}
 
+    /**
+     * @return list<TopGameDto>
+     */
     public function execute(): array
     {
         $stats = $this->latestGameStats->execute(limit: 3);
-
         $gradients = [
             'from-blue-600 to-blue-400',
             'from-green-600 to-emerald-400',
@@ -25,22 +28,18 @@ final class GetTopGames
             'from-indigo-600 to-violet-400',
         ];
 
-        $games = [];
-        foreach ($stats as $index => $stat) {
-            $game = $stat->game;
-            $totalHours = (int) round($stat->total_minutes / 60);
-            $gradient = $gradients[$index % count($gradients)];
-
-            $games[] = [
-                'game_id' => $game->id,
-                'game_name' => $game->name,
-                'icon_url' => $game->iconUrlLarge(),
-                'total_time' => $totalHours,
-                'last_played' => $stat->last_played_at,
-                'gradient' => $gradient,
-            ];
-        }
-
-        return $games;
+        return $stats
+            ->values()
+            ->map(
+                fn ($stat, int $index): TopGameDto => new TopGameDto(
+                    gameId: $stat->game->id,
+                    gameName: $stat->game->name,
+                    iconUrl: $stat->game->iconUrlLarge(),
+                    totalTime: (int) round($stat->total_minutes / 60),
+                    lastPlayed: $stat->last_played_at,
+                    gradient: $gradients[$index % count($gradients)],
+                )
+            )
+            ->all();
     }
 }
