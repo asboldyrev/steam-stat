@@ -4,42 +4,27 @@ declare(strict_types=1);
 
 namespace App\Actions\Dashboard;
 
+use App\Dto\Dashboard\DashboardStatsDto;
 use App\Models\Game;
 use App\Models\SummaryStat;
 
 final class GetDashboardStats
 {
-    public function __construct() {}
-
-    /**
-     * @return array{
-     *     total_playtime_hours: int,
-     *     games_count: int,
-     *     steam_deck_hours: int,
-     *     steam_deck_percentage: int
-     * }
-     */
-    public function execute(): array
+    public function execute(): DashboardStatsDto
     {
-        $stat = SummaryStat::orderByDesc('date')->first();
+        $stat = SummaryStat::query()->orderByDesc('date')->first();
 
-        $totalMinutes = (int) $stat->total_minutes;
-        $deckMinutes = (int) $stat->deck_minutes;
-
+        $totalMinutes = (int) ($stat?->total_minutes ?? 0);
+        $deckMinutes = (int) ($stat?->deck_minutes ?? 0);
         $gamesCount = Game::query()->count();
 
-        $totalHours = (int) round($totalMinutes / 60);
-        $deckHours = (int) round($deckMinutes / 60);
-
-        $deckPercentage = $totalMinutes > 0
-            ? (int) round(($deckMinutes / $totalMinutes) * 100)
-            : 0;
-
-        return [
-            'total_playtime_hours' => $totalHours,
-            'games_count' => $gamesCount,
-            'steam_deck_hours' => $deckHours,
-            'steam_deck_percentage' => $deckPercentage,
-        ];
+        return new DashboardStatsDto(
+            totalPlaytimeHours: (int) round($totalMinutes / 60),
+            gamesCount: $gamesCount,
+            steamDeckHours: (int) round($deckMinutes / 60),
+            steamDeckPercentage: $totalMinutes > 0
+                ? (int) round(($deckMinutes / $totalMinutes) * 100)
+                : 0,
+        );
     }
 }
