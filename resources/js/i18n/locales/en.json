@@ -19,46 +19,21 @@
         },
         "pageSubtitle": "Track and analyze your Steam gaming statistics"
     },
-    "activity": {
-        "filters": {
-            "from": "From",
-            "to": "To",
-            "apply": "Apply"
-        },
-        "summary": {
-            "playtime": "Playtime",
-            "activeDays": "Active days",
-            "games": "Games in period",
-            "average": "Average per active day",
-            "previous": "Previous period: {value}",
-            "periodDays": "Period: {value} days",
-            "previousGames": "Previous period: {value}",
-            "perActiveDay": "Calculated from active days only"
-        },
-        "daily": {
-            "title": "Daily activity",
-            "subtitle": "Playtime within the selected period"
-        },
-        "records": {
-            "title": "Period records",
-            "bestDay": "Best day",
-            "bestGame": "Most active game",
-            "longestStreak": "Longest streak",
-            "currentStreak": "Current streak"
-        },
-        "games": {
-            "title": "Games in period"
-        },
-        "platforms": {
-            "title": "Platforms"
-        },
-        "heatmap": {
-            "title": "Activity heatmap",
-            "subtitle": "Darker cells represent more playtime"
-        },
-        "noActivity": "There is no gaming activity in the selected period."
-    },
     "dashboard": {
+        "overview": {
+            "trackedActivity": "Tracked activity",
+            "playtime7d": "Playtime over 7 days",
+            "description": "During this period activity was recorded in {games} games across {days} active days.",
+            "activeDays": "Active days",
+            "last7Days": "Over the last 7 days",
+            "vsPrevious": "{value} vs previous period",
+            "noPrevious": "No previous-period data"
+        },
+        "activity7d": {
+            "title": "7-day activity",
+            "subtitle": "Observed Steam counter changes by day",
+            "openActivity": "View details"
+        },
         "stats": {
             "totalPlaytime": "Total Playtime",
             "gamesPlayed": "Games Played",
@@ -90,6 +65,45 @@
                 "lastPlayed": "Last Played"
             }
         }
+    },
+    "activity": {
+        "filters": {
+            "from": "From",
+            "to": "To",
+            "apply": "Apply"
+        },
+        "summary": {
+            "playtime": "Playtime",
+            "activeDays": "Active days",
+            "games": "Games",
+            "average": "Average",
+            "previous": "Previous period: {value}",
+            "periodDays": "Period: {value} days",
+            "previousGames": "Previous period: {value}",
+            "perActiveDay": "Per active day"
+        },
+        "daily": {
+            "title": "Daily activity",
+            "subtitle": "Playtime during the selected period"
+        },
+        "records": {
+            "title": "Records",
+            "bestDay": "Best day",
+            "bestGame": "Most active game",
+            "longestStreak": "Longest streak",
+            "currentStreak": "Current streak"
+        },
+        "games": {
+            "title": "Games in period"
+        },
+        "platforms": {
+            "title": "Platforms"
+        },
+        "heatmap": {
+            "title": "Activity heatmap",
+            "subtitle": "Daily intensity"
+        },
+        "approximate": "Hourly statistics are approximate"
     },
     "library": {
         "title": "Your Game Library",
