@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace App\Services\Steam;
 
-use App\Data\SteamGameData;
-use App\Data\SteamPlaytimeTotalsData;
+use App\Dto\Steam\SteamGameDto;
+use App\Dto\Steam\SteamPlaytimeTotalsDto;
+use App\Integrations\Steam\SteamApiClient;
 use App\Models\Game;
 use App\Models\GameStat;
 use App\Models\SummaryStat;
@@ -24,7 +25,7 @@ final class SteamStatsSyncService
         $dateString = $date->toDateString();
 
         $games = $this->steamApi->getPlayedGames();
-        $totals = $this->steamApi->getTotals();
+        $totals = SteamPlaytimeTotalsDto::fromGames($games);
 
         $this->syncGames($games);
         $this->syncGameStats($games, $dateString);
@@ -32,7 +33,7 @@ final class SteamStatsSyncService
     }
 
     /**
-     * @param Collection<int, SteamGameData> $games
+     * @param Collection<int, SteamGameDto> $games
      */
     private function syncGames(Collection $games): void
     {
@@ -49,7 +50,7 @@ final class SteamStatsSyncService
     }
 
     /**
-     * @param Collection<int, SteamGameData> $games
+     * @param Collection<int, SteamGameDto> $games
      */
     private function syncGameStats(Collection $games, string $dateString): void
     {
@@ -60,13 +61,11 @@ final class SteamStatsSyncService
                 continue;
             }
 
-            // Получаем последнюю запись для этой игры
             $lastStat = GameStat::query()
                 ->where('game_id', $dbGame->id)
                 ->orderByDesc('date')
                 ->first();
 
-            // Если данные не изменились — пропускаем
             if ($lastStat !== null
                 && (int) $lastStat->total_minutes === $game->totalMinutes
                 && (int) $lastStat->windows_minutes === $game->windowsMinutes
@@ -78,7 +77,6 @@ final class SteamStatsSyncService
                 continue;
             }
 
-            // Вычисляем delta
             $deltaTotal = $lastStat ? $game->totalMinutes - (int) $lastStat->total_minutes : 0;
             $deltaWindows = $lastStat ? $game->windowsMinutes - (int) $lastStat->windows_minutes : 0;
             $deltaLinux = $lastStat ? $game->linuxMinutes - (int) $lastStat->linux_minutes : 0;
@@ -86,7 +84,6 @@ final class SteamStatsSyncService
             $deltaDeck = $lastStat ? $game->deckMinutes - (int) $lastStat->deck_minutes : 0;
             $deltaDisconnected = $lastStat ? $game->disconnectedMinutes - (int) $lastStat->disconnected_minutes : 0;
 
-            // Создаём новую запись (или обновляем запись за сегодня если уже есть)
             GameStat::updateOrCreate(
                 [
                     'game_id' => $dbGame->id,
@@ -111,14 +108,12 @@ final class SteamStatsSyncService
         }
     }
 
-    private function syncSummaryStats(SteamPlaytimeTotalsData $totals, string $dateString): void
+    private function syncSummaryStats(SteamPlaytimeTotalsDto $totals, string $dateString): void
     {
-        // Получаем последнюю запись суммарной статистики
         $lastStat = SummaryStat::query()
             ->orderByDesc('date')
             ->first();
 
-        // Если данные не изменились — пропускаем
         if ($lastStat !== null
             && (int) $lastStat->total_minutes === $totals->totalMinutes
             && (int) $lastStat->windows_minutes === $totals->windowsMinutes
@@ -130,7 +125,6 @@ final class SteamStatsSyncService
             return;
         }
 
-        // Вычисляем delta
         $deltaTotal = $lastStat ? $totals->totalMinutes - (int) $lastStat->total_minutes : 0;
         $deltaWindows = $lastStat ? $totals->windowsMinutes - (int) $lastStat->windows_minutes : 0;
         $deltaLinux = $lastStat ? $totals->linuxMinutes - (int) $lastStat->linux_minutes : 0;
