@@ -11,7 +11,21 @@ final class SteamStoreClient
 {
     public function fetchGameMetadata(int $appId): ?array
     {
-        $response = $this->client()->get('https://store.steampowered.com/api/appdetails', [
+        $coverUrl = $this->fetchCoverFromAppDetails($appId)
+            ?? $this->fetchCoverFromStorePage($appId);
+
+        if ($coverUrl === null) {
+            return null;
+        }
+
+        return [
+            'cover_url' => $coverUrl,
+        ];
+    }
+
+    private function fetchCoverFromAppDetails(int $appId): ?string
+    {
+        $response = $this->jsonClient()->get('https://store.steampowered.com/api/appdetails', [
             'appids' => $appId,
             'l' => 'english',
         ]);
@@ -32,7 +46,7 @@ final class SteamStoreClient
 
         // Prefer large artwork. capsule_image/capsule_imagev5 are intentionally last:
         // they are small store capsules and become visibly blurry on desktop cards.
-        $coverUrl = $this->firstString($data, [
+        return $this->firstString($data, [
             'header_image',
             'background_raw',
             'background',
@@ -41,17 +55,53 @@ final class SteamStoreClient
                 'capsule_image',
                 'capsule_imagev5',
             ]);
-
-        return [
-            'cover_url' => $coverUrl,
-        ];
     }
 
-    private function client(): PendingRequest
+    private function fetchCoverFromStorePage(int $appId): ?string
+    {
+        $response = $this->htmlClient()->get("https://store.steampowered.com/app/{$appId}/", [
+            'l' => 'english',
+        ]);
+
+        if (!$response->successful()) {
+            return null;
+        }
+
+        $html = $response->body();
+
+        $patterns = [
+            '/<meta\s+property=["\']og:image["\']\s+content=["\']([^"\']+)["\']/i',
+            '/<meta\s+content=["\']([^"\']+)["\']\s+property=["\']og:image["\']/i',
+            '/<link\s+rel=["\']image_src["\']\s+href=["\']([^"\']+)["\']/i',
+        ];
+
+        foreach ($patterns as $pattern) {
+            if (preg_match($pattern, $html, $matches) === 1) {
+                $url = html_entity_decode($matches[1], ENT_QUOTES | ENT_HTML5);
+                if (filter_var($url, FILTER_VALIDATE_URL) !== false) {
+                    return $url;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private function jsonClient(): PendingRequest
     {
         return Http::acceptJson()
             ->timeout(10)
             ->retry(2, 500, throw: false);
+    }
+
+    private function htmlClient(): PendingRequest
+    {
+        return Http::withHeaders([
+            'Accept' => 'text/html,application/xhtml+xml',
+            'User-Agent' => 'Mozilla/5.0 (compatible; SteamStat/1.0)',
+        ])
+            ->timeout(10)
+            ->retry(1, 500, throw: false);
     }
 
     private function firstString(array $data, array $keys): ?string
