@@ -157,11 +157,7 @@ const activePlatforms = (game) => {
 
 const formatLastPlayed = (timestamp) => {
     if (!timestamp) return '—'
-    return formatDate(new Date(timestamp * 1000), {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-    })
+    return formatDate(new Date(timestamp * 1000), 'D MMM YYYY')
 }
 
 const fetchGames = async () => {
