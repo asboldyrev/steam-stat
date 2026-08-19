@@ -2,9 +2,9 @@
 
 namespace App\Providers;
 
-use App\Services\Steam\SteamApiClient;
-use Illuminate\Support\ServiceProvider;
+use App\Integrations\Steam\SteamApiClient;
 use Illuminate\Http\Client\Factory as HttpFactory;
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
