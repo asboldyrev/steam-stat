@@ -30,24 +30,11 @@
 
             <div class="grid gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
                 <article class="rounded-2xl border border-gray-200/80 bg-white/80 p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900/70">
-                    <div class="mb-5 flex items-center justify-between gap-4">
-                        <div>
-                            <h3 class="font-semibold text-gray-900 dark:text-white">{{ t('activity.daily.title') }}</h3>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('activity.daily.subtitle') }}</p>
-                        </div>
+                    <div class="mb-4">
+                        <h3 class="font-semibold text-gray-900 dark:text-white">{{ t('activity.daily.title') }}</h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('activity.daily.subtitle') }}</p>
                     </div>
-
-                    <div v-if="maxDailyMinutes > 0" class="flex h-56 items-end gap-1 overflow-x-auto pb-6">
-                        <div v-for="day in overview.daily" :key="day.date" class="group relative flex h-full min-w-3 flex-1 items-end">
-                            <div
-                                class="w-full rounded-t-md bg-steam-blue/75 transition-opacity group-hover:opacity-80"
-                                :style="{ height: `${Math.max(3, (day.minutes / maxDailyMinutes) * 100)}%` }"
-                            ></div>
-                            <div class="pointer-events-none absolute bottom-full left-1/2 z-10 mb-2 hidden -translate-x-1/2 whitespace-nowrap rounded-lg bg-gray-950 px-2 py-1 text-xs text-white group-hover:block">
-                                {{ day.date }} · {{ formatMinutes(day.minutes) }}
-                            </div>
-                        </div>
-                    </div>
+                    <BaseChart v-if="hasDailyActivity" :option="dailyChartOption" :height="280" />
                     <PageState v-else :message="t('activity.noActivity')" />
                 </article>
 
@@ -95,35 +82,18 @@
 
                 <article class="rounded-2xl border border-gray-200/80 bg-white/80 p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900/70">
                     <h3 class="font-semibold text-gray-900 dark:text-white">{{ t('activity.platforms.title') }}</h3>
-                    <div v-if="overview.platforms.length" class="mt-4 space-y-4">
-                        <div v-for="platform in overview.platforms" :key="platform.name">
-                            <div class="flex items-center justify-between text-sm">
-                                <span class="text-gray-700 dark:text-gray-300">{{ platform.name }}</span>
-                                <span class="font-medium text-gray-900 dark:text-white">{{ platform.percentage }}%</span>
-                            </div>
-                            <div class="mt-1.5 h-2 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
-                                <div class="h-full rounded-full bg-steam-blue" :style="{ width: `${platform.percentage}%` }"></div>
-                            </div>
-                        </div>
-                    </div>
+                    <BaseChart v-if="overview.platforms.length" :option="platformChartOption" :height="280" />
                     <PageState v-else :message="t('activity.noActivity')" />
                 </article>
             </div>
 
             <article v-if="insights" class="rounded-2xl border border-gray-200/80 bg-white/80 p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900/70">
-                <div class="mb-4">
+                <div class="mb-2">
                     <h3 class="font-semibold text-gray-900 dark:text-white">{{ t('activity.heatmap.title') }}</h3>
                     <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('activity.heatmap.subtitle') }}</p>
                 </div>
-                <div class="grid grid-cols-14 gap-1 sm:grid-cols-21 md:grid-cols-30 lg:grid-cols-45 xl:grid-cols-60">
-                    <div
-                        v-for="day in insights.heatmap"
-                        :key="day.date"
-                        class="aspect-square rounded-[3px] bg-steam-blue"
-                        :class="heatmapOpacity(day.minutes)"
-                        :title="`${day.date}: ${formatMinutes(day.minutes)}`"
-                    ></div>
-                </div>
+                <BaseChart v-if="insights.heatmap.length" :option="heatmapChartOption" :height="230" />
+                <PageState v-else :message="t('activity.noActivity')" />
             </article>
         </template>
 
@@ -134,10 +104,13 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import BaseChart from '@/components/charts/BaseChart.vue'
 import PageState from '@/components/PageState.vue'
 import { useApi } from '@/composables/useApi.js'
+import { useTheme } from '@/composables/useTheme.js'
 
 const { t } = useI18n()
+const { isDark } = useTheme()
 const { getActivity, getActivityInsights } = useApi()
 
 const today = new Date()
@@ -213,9 +186,118 @@ const summaryCards = computed(() => {
     ]
 })
 
-const maxDailyMinutes = computed(() => Math.max(0, ...(overview.value?.daily || []).map((day) => day.minutes)))
+const axisColor = computed(() => isDark.value ? '#9ca3af' : '#6b7280')
+const splitColor = computed(() => isDark.value ? '#374151' : '#e5e7eb')
 const maxGameMinutes = computed(() => Math.max(1, ...(overview.value?.games || []).map((game) => game.minutes)))
-const maxHeatmapMinutes = computed(() => Math.max(1, ...(insights.value?.heatmap || []).map((day) => day.minutes)))
+const hasDailyActivity = computed(() => (overview.value?.daily || []).some((day) => Number(day.minutes) > 0))
+
+const dailyChartOption = computed(() => ({
+    backgroundColor: 'transparent',
+    animationDuration: 350,
+    grid: { left: 12, right: 12, top: 20, bottom: 24, containLabel: true },
+    tooltip: {
+        trigger: 'axis',
+        formatter: (items) => {
+            const item = items?.[0]
+            return item ? `${item.axisValue}<br/>${formatMinutes(item.value)}` : ''
+        },
+    },
+    xAxis: {
+        type: 'category',
+        data: (overview.value?.daily || []).map((day) => day.date.slice(5)),
+        axisLine: { lineStyle: { color: splitColor.value } },
+        axisTick: { show: false },
+        axisLabel: { color: axisColor.value, hideOverlap: true },
+    },
+    yAxis: {
+        type: 'value',
+        minInterval: 1,
+        axisLabel: { color: axisColor.value, formatter: (value) => formatMinutes(value) },
+        splitLine: { lineStyle: { color: splitColor.value } },
+    },
+    series: [{
+        type: 'bar',
+        data: (overview.value?.daily || []).map((day) => day.minutes),
+        barMaxWidth: 34,
+        itemStyle: { color: '#3b82f6', borderRadius: [7, 7, 2, 2] },
+        emphasis: { itemStyle: { color: '#06b6d4' } },
+    }],
+}))
+
+const platformChartOption = computed(() => ({
+    backgroundColor: 'transparent',
+    tooltip: {
+        trigger: 'item',
+        formatter: ({ name, value, percent }) => `${name}<br/>${formatMinutes(value)} · ${percent}%`,
+    },
+    legend: {
+        bottom: 0,
+        textStyle: { color: axisColor.value },
+    },
+    series: [{
+        type: 'pie',
+        radius: ['48%', '72%'],
+        center: ['50%', '43%'],
+        avoidLabelOverlap: true,
+        padAngle: 2,
+        itemStyle: { borderRadius: 6 },
+        label: { show: false },
+        data: (overview.value?.platforms || []).map((platform) => ({
+            name: platform.name,
+            value: platform.minutes,
+        })),
+    }],
+}))
+
+const heatmapChartOption = computed(() => {
+    const data = (insights.value?.heatmap || []).map((day) => [day.date, day.minutes])
+    const maxMinutes = Math.max(1, ...data.map((item) => Number(item[1]) || 0))
+    const firstDate = data[0]?.[0] || filters.from
+    const lastDate = data[data.length - 1]?.[0] || filters.to
+
+    return {
+        backgroundColor: 'transparent',
+        tooltip: {
+            formatter: ({ value }) => `${value?.[0] || ''}<br/>${formatMinutes(value?.[1] || 0)}`,
+        },
+        visualMap: {
+            min: 0,
+            max: maxMinutes,
+            calculable: false,
+            orient: 'horizontal',
+            left: 'center',
+            bottom: 0,
+            textStyle: { color: axisColor.value },
+            inRange: {
+                color: isDark.value
+                    ? ['#1f2937', '#1d4ed8', '#22d3ee']
+                    : ['#eff6ff', '#60a5fa', '#0891b2'],
+            },
+        },
+        calendar: {
+            top: 18,
+            left: 38,
+            right: 24,
+            bottom: 48,
+            range: [firstDate, lastDate],
+            cellSize: ['auto', 18],
+            itemStyle: {
+                color: isDark.value ? '#111827' : '#f3f4f6',
+                borderWidth: 3,
+                borderColor: isDark.value ? '#111827' : '#ffffff',
+            },
+            splitLine: { show: false },
+            dayLabel: { color: axisColor.value, firstDay: 1, nameMap: 'en' },
+            monthLabel: { color: axisColor.value },
+            yearLabel: { show: false },
+        },
+        series: [{
+            type: 'heatmap',
+            coordinateSystem: 'calendar',
+            data,
+        }],
+    }
+})
 
 const bestDay = computed(() => {
     const value = insights.value?.records?.best_day
@@ -226,15 +308,6 @@ const bestGame = computed(() => {
     const value = insights.value?.records?.best_game
     return value ? `${value.name} · ${formatMinutes(value.minutes)}` : '—'
 })
-
-const heatmapOpacity = (minutes) => {
-    if (minutes <= 0) return 'opacity-10'
-    const ratio = minutes / maxHeatmapMinutes.value
-    if (ratio < 0.25) return 'opacity-30'
-    if (ratio < 0.5) return 'opacity-50'
-    if (ratio < 0.75) return 'opacity-70'
-    return 'opacity-100'
-}
 
 onMounted(load)
 </script>
