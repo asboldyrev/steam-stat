@@ -60,10 +60,12 @@ final class SteamStatsSyncServiceTest extends TestCase
     {
         $this->configureSteam();
 
-        Http::fakeSequence('https://api.steampowered.com/*')
-            ->push($this->steamResponse(100, 100, 0, 0))
-            ->push($this->steamResponse(130, 130, 0, 0))
-            ->push($this->steamResponse(160, 160, 0, 0));
+        Http::fake([
+            'https://api.steampowered.com/*' => Http::sequence()
+                ->push($this->steamResponse(100, 100, 0, 0))
+                ->push($this->steamResponse(130, 130, 0, 0))
+                ->push($this->steamResponse(160, 160, 0, 0)),
+        ]);
 
         $service = $this->app->make(SteamStatsSyncService::class);
 
@@ -89,9 +91,11 @@ final class SteamStatsSyncServiceTest extends TestCase
     {
         $this->configureSteam();
 
-        Http::fakeSequence('https://api.steampowered.com/*')
-            ->push($this->steamResponse(200, 200, 0, 0))
-            ->push($this->steamResponse(180, 180, 0, 0));
+        Http::fake([
+            'https://api.steampowered.com/*' => Http::sequence()
+                ->push($this->steamResponse(200, 200, 0, 0))
+                ->push($this->steamResponse(180, 180, 0, 0)),
+        ]);
 
         $service = $this->app->make(SteamStatsSyncService::class);
         $service->sync(CarbonImmutable::parse('2026-08-18 12:00:00'));
