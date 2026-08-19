@@ -63,14 +63,14 @@
                 :to="`/game/${game.id}`"
                 class="group overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-lg dark:border-gray-800 dark:bg-gray-900 dark:hover:border-blue-900"
             >
-                <div class="relative aspect-[460/215] overflow-hidden bg-gray-100 dark:bg-gray-800">
+                <div class="relative aspect-[920/430] overflow-hidden bg-gray-100 dark:bg-gray-800">
                     <img
-                        v-if="game.cover_url && !game.coverError"
-                        :src="game.cover_url"
+                        v-if="currentCover(game)"
+                        :src="currentCover(game)"
                         :alt="game.name"
                         class="h-full w-full object-cover transition duration-300 group-hover:scale-[1.015]"
                         loading="lazy"
-                        @error="game.coverError = true"
+                        @error="advanceCover(game)"
                     />
 
                     <div
@@ -178,6 +178,40 @@ const formatLastPlayed = (timestamp) => {
     return formatDate(new Date(timestamp * 1000), 'D MMM YYYY')
 }
 
+const hdHeaderUrl = (url) => {
+    if (!url || !/\/header\.jpg(?:\?|$)/.test(url)) return null
+    return url.replace('/header.jpg', '/header_2x.jpg')
+}
+
+const buildCoverCandidates = (game) => {
+    const candidates = []
+    const add = (url) => {
+        if (url && !candidates.includes(url)) candidates.push(url)
+    }
+
+    // Store metadata can point to a hashed asset directory. Try its HD sibling first,
+    // then the exact URL returned by Steam.
+    add(hdHeaderUrl(game.cover_url))
+    add(game.cover_url)
+
+    // Older apps often still expose the non-hashed paths. They also give us a useful
+    // fallback when Store metadata could not be fetched for a particular game.
+    if (game.app_id) {
+        const base = `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${game.app_id}`
+        add(`${base}/header_2x.jpg`)
+        add(`${base}/header.jpg`)
+    }
+
+    return candidates
+}
+
+const currentCover = (game) => game.coverCandidates?.[game.coverIndex] || null
+
+const advanceCover = (game) => {
+    if (!game.coverCandidates) return
+    game.coverIndex += 1
+}
+
 const fetchGames = async () => {
     loading.value = true
     error.value = ''
@@ -192,7 +226,8 @@ const fetchGames = async () => {
         const response = await getGames(params)
         games.value = (response.games || []).map((game) => ({
             ...game,
-            coverError: false,
+            coverCandidates: buildCoverCandidates(game),
+            coverIndex: 0,
             iconError: false,
         }))
     } catch (requestError) {
