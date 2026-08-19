@@ -23,7 +23,6 @@ final class GameController extends Controller
         $sort = $request->query('sort', 'playtime');
         $platform = $request->query('platform', 'all');
 
-        // Получаем последние записи для каждой игры
         $latestStats = GameStat::query()
             ->select('game_id', DB::raw('MAX(date) as max_date'))
             ->groupBy('game_id')
@@ -47,7 +46,6 @@ final class GameController extends Controller
                 }
             });
 
-        // Фильтр по платформе
         if ($platform !== 'all') {
             $query->where(function ($q) use ($platform) {
                 match ($platform) {
@@ -60,14 +58,12 @@ final class GameController extends Controller
             });
         }
 
-        // Поиск по названию игры
         if ($search) {
             $query->whereHas('game', function ($q) use ($search) {
                 $q->where('name', 'like', '%' . $search . '%');
             });
         }
 
-        // Сортировка
         match ($sort) {
             'name' => $query->orderBy(
                 Game::select('name')
@@ -76,7 +72,7 @@ final class GameController extends Controller
                 'asc'
             ),
             'last_played' => $query->orderByDesc('last_played_at'),
-            default => $query->orderByDesc('total_minutes'), // playtime
+            default => $query->orderByDesc('total_minutes'),
         };
 
         $stats = $query->get();
@@ -93,20 +89,20 @@ final class GameController extends Controller
         $games = [];
         foreach ($stats as $index => $stat) {
             $game = $stat->game;
-
             $abbreviation = $this->generateAbbreviation($game->name);
-
             $totalHours = (int) round($stat->total_minutes / 60);
             $gradient = $gradients[$index % count($gradients)];
 
             $games[] = [
                 'id' => $game->id,
+                'app_id' => $game->app_id,
                 'name' => $game->name,
                 'abbreviation' => $abbreviation,
                 'icon_url' => $game->iconUrlLarge(),
+                'cover_url' => $game->coverUrl(),
                 'gradient' => $gradient,
                 'total_time' => $totalHours,
-                'last_played' => $stat->last_played_at->timestamp,
+                'last_played' => $stat->last_played_at?->timestamp,
                 'platforms' => [
                     'windows' => $stat->windows_minutes > 0,
                     'deck' => $stat->deck_minutes > 0,
@@ -130,11 +126,14 @@ final class GameController extends Controller
 
         return response()->json([
             'id' => $game->id,
+            'app_id' => $game->app_id,
             'name' => $game->name,
             'abbreviation' => $this->generateAbbreviation($game->name),
             'icon_url' => $game->iconUrlLarge(),
+            'cover_url' => $game->coverUrl(),
+            'store_url' => $game->storeUrl(),
             'total_playtime_hours' => $totalPlaytimeHours,
-            'last_played' => $latestStat->last_played_at->timestamp,
+            'last_played' => $latestStat?->last_played_at?->timestamp,
         ]);
     }
 
@@ -155,7 +154,7 @@ final class GameController extends Controller
         $deckMinutes = $latestStat->deck_minutes;
         $disconnectedMinutes = $latestStat->disconnected_minutes;
 
-        $linuxDesktopMinutes = $linuxMinutes - $deckMinutes;
+        $linuxDesktopMinutes = max(0, $linuxMinutes - $deckMinutes);
 
         $platforms = [];
         if ($windowsMinutes > 0) {
@@ -199,7 +198,6 @@ final class GameController extends Controller
             ];
         }
 
-        // Считаем общее время для процентов
         $totalMinutes = $windowsMinutes + $linuxDesktopMinutes + $macMinutes + $deckMinutes + $disconnectedMinutes;
         if ($totalMinutes > 0) {
             foreach ($platforms as &$platform) {
@@ -207,7 +205,6 @@ final class GameController extends Controller
             }
         }
 
-        // Сортировка по убыванию hours
         usort($platforms, fn($a, $b) => $b['hours'] <=> $a['hours']);
 
         return response()->json(['platforms' => $platforms]);
@@ -249,9 +246,6 @@ final class GameController extends Controller
         return response()->json(['history' => $history]);
     }
 
-    /**
-     * Генерирует аббревиатуру из названия игры.
-     */
     private function generateAbbreviation(string $name): string
     {
         $words = preg_split('/\s+/u', trim($name));
@@ -273,15 +267,12 @@ final class GameController extends Controller
         return mb_strlen($abbr, 'UTF-8') > 0 ? $abbr : '???';
     }
 
-    /**
-     * Определяет платформу с максимальным временем.
-     */
     private function determinePlatform(GameStat $stat): string
     {
         $platforms = [
             'Windows' => $stat->windows_minutes,
             'Steam Deck' => $stat->deck_minutes,
-            'Linux' => $stat->linux_minutes - $stat->deck_minutes,
+            'Linux' => max(0, $stat->linux_minutes - $stat->deck_minutes),
             'macOS' => $stat->mac_minutes,
             'Offline' => $stat->disconnected_minutes,
         ];
@@ -290,9 +281,6 @@ final class GameController extends Controller
         return array_key_first($platforms) ?? 'Unknown';
     }
 
-    /**
-     * Возвращает цвет платформы.
-     */
     private function platformColor(string $platform): string
     {
         return match ($platform) {
