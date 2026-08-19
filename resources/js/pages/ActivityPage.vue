@@ -1,15 +1,9 @@
 <template>
     <section class="space-y-6">
         <div class="flex flex-col gap-3 rounded-2xl border border-gray-200/80 bg-white/80 p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900/70 sm:flex-row sm:items-end sm:justify-between">
-            <div class="grid grid-cols-2 gap-3 sm:flex">
-                <label class="space-y-1 text-sm text-gray-600 dark:text-gray-400">
-                    <span>{{ t('activity.filters.from') }}</span>
-                    <input v-model="filters.from" type="date" class="block w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-white" />
-                </label>
-                <label class="space-y-1 text-sm text-gray-600 dark:text-gray-400">
-                    <span>{{ t('activity.filters.to') }}</span>
-                    <input v-model="filters.to" type="date" class="block w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-white" />
-                </label>
+            <div class="space-y-1.5">
+                <span class="text-sm text-gray-600 dark:text-gray-400">{{ t('activity.filters.period') }}</span>
+                <DateRangePicker v-model="dateRange" />
             </div>
 
             <button type="button" class="rounded-xl bg-steam-gradient px-4 py-2.5 text-sm font-medium text-white hover:opacity-90" @click="load">
@@ -92,7 +86,7 @@
                     <h3 class="font-semibold text-gray-900 dark:text-white">{{ t('activity.heatmap.title') }}</h3>
                     <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('activity.heatmap.subtitle') }}</p>
                 </div>
-                <BaseChart v-if="insights.heatmap.length" :option="heatmapChartOption" :height="230" />
+                <BaseChart v-if="insights.heatmap.length" :option="heatmapChartOption" :height="260" />
                 <PageState v-else :message="t('activity.noActivity')" />
             </article>
         </template>
@@ -102,15 +96,18 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import BaseChart from '@/components/charts/BaseChart.vue'
 import PageState from '@/components/PageState.vue'
+import DateRangePicker from '@/components/ui/date-range-picker/DateRangePicker.vue'
 import { useApi } from '@/composables/useApi.js'
+import { useDateFormat } from '@/composables/useDateFormat.js'
 import { useTheme } from '@/composables/useTheme.js'
 
 const { t } = useI18n()
 const { isDark } = useTheme()
+const { formatDate, formatShortDate, monthNames, weekdayNames } = useDateFormat()
 const { getActivity, getActivityInsights } = useApi()
 
 const today = new Date()
@@ -124,7 +121,7 @@ const toDateInput = (date) => {
     return `${year}-${month}-${day}`
 }
 
-const filters = reactive({
+const dateRange = ref({
     from: toDateInput(thirtyDaysAgo),
     to: toDateInput(today),
 })
@@ -145,7 +142,7 @@ const load = async () => {
     error.value = ''
 
     try {
-        const params = { from: filters.from, to: filters.to }
+        const params = { from: dateRange.value.from, to: dateRange.value.to }
         const [overviewData, insightsData] = await Promise.all([
             getActivity(params),
             getActivityInsights(params),
@@ -204,7 +201,7 @@ const dailyChartOption = computed(() => ({
     },
     xAxis: {
         type: 'category',
-        data: (overview.value?.daily || []).map((day) => day.date.slice(5)),
+        data: (overview.value?.daily || []).map((day) => formatShortDate(day.date)),
         axisLine: { lineStyle: { color: splitColor.value } },
         axisTick: { show: false },
         axisLabel: { color: axisColor.value, hideOverlap: true },
@@ -252,13 +249,13 @@ const platformChartOption = computed(() => ({
 const heatmapChartOption = computed(() => {
     const data = (insights.value?.heatmap || []).map((day) => [day.date, day.minutes])
     const maxMinutes = Math.max(1, ...data.map((item) => Number(item[1]) || 0))
-    const firstDate = data[0]?.[0] || filters.from
-    const lastDate = data[data.length - 1]?.[0] || filters.to
+    const firstDate = data[0]?.[0] || dateRange.value.from
+    const lastDate = data[data.length - 1]?.[0] || dateRange.value.to
 
     return {
         backgroundColor: 'transparent',
         tooltip: {
-            formatter: ({ value }) => `${value?.[0] || ''}<br/>${formatMinutes(value?.[1] || 0)}`,
+            formatter: ({ value }) => `${formatDate(value?.[0])}<br/>${formatMinutes(value?.[1] || 0)}`,
         },
         visualMap: {
             min: 0,
@@ -266,7 +263,9 @@ const heatmapChartOption = computed(() => {
             calculable: false,
             orient: 'horizontal',
             left: 'center',
-            bottom: 0,
+            bottom: 2,
+            itemWidth: 120,
+            itemHeight: 10,
             textStyle: { color: axisColor.value },
             inRange: {
                 color: isDark.value
@@ -275,20 +274,28 @@ const heatmapChartOption = computed(() => {
             },
         },
         calendar: {
-            top: 18,
-            left: 38,
-            right: 24,
-            bottom: 48,
+            top: 42,
+            left: 'center',
+            bottom: 56,
             range: [firstDate, lastDate],
-            cellSize: ['auto', 18],
+            cellSize: [20, 20],
             itemStyle: {
                 color: isDark.value ? '#111827' : '#f3f4f6',
-                borderWidth: 3,
+                borderWidth: 2,
                 borderColor: isDark.value ? '#111827' : '#ffffff',
             },
             splitLine: { show: false },
-            dayLabel: { color: axisColor.value, firstDay: 1, nameMap: 'en' },
-            monthLabel: { color: axisColor.value },
+            dayLabel: {
+                color: axisColor.value,
+                firstDay: 1,
+                margin: 8,
+                nameMap: weekdayNames.value,
+            },
+            monthLabel: {
+                color: axisColor.value,
+                margin: 12,
+                nameMap: monthNames.value,
+            },
             yearLabel: { show: false },
         },
         series: [{
@@ -301,7 +308,7 @@ const heatmapChartOption = computed(() => {
 
 const bestDay = computed(() => {
     const value = insights.value?.records?.best_day
-    return value ? `${value.date} · ${formatMinutes(value.minutes)}` : '—'
+    return value ? `${formatDate(value.date)} · ${formatMinutes(value.minutes)}` : '—'
 })
 
 const bestGame = computed(() => {
