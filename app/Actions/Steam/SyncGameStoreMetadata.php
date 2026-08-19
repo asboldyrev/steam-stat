@@ -19,6 +19,12 @@ final class SyncGameStoreMetadata
         }
 
         $metadata = $this->client->fetchGameMetadata((int) $game->app_id);
+        if ($metadata === null) {
+            // A transient Store API failure must not make the game look successfully
+            // refreshed for the next 30 days. Leave the previous artwork untouched and
+            // allow the next scheduled/manual run to retry it.
+            return false;
+        }
 
         $game->forceFill([
             'cover_url' => $metadata['cover_url'] ?? $game->cover_url,
