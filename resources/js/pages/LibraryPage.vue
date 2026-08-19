@@ -16,41 +16,31 @@
                 <div class="grid gap-3 sm:grid-cols-2 xl:min-w-[620px]">
                     <label class="block">
                         <span class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{{ t('library.controls.search') }}</span>
-                        <input
-                            v-model.trim="searchQuery"
+                        <Input
+                            v-model="searchQuery"
                             type="search"
                             :placeholder="t('library.filterPlaceholder')"
-                            class="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:focus:ring-blue-950"
                         />
                     </label>
 
                     <label class="block">
                         <span class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{{ t('library.controls.sort') }}</span>
-                        <select
-                            v-model="sortBy"
-                            class="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:focus:ring-blue-950"
-                        >
-                            <option value="playtime">{{ t('library.sortBy.playtime') }}</option>
-                            <option value="name">{{ t('library.sortBy.name') }}</option>
-                            <option value="last_played">{{ t('library.sortBy.lastPlayed') }}</option>
-                        </select>
+                        <Select v-model="sortBy" :options="sortOptions" />
                     </label>
                 </div>
             </div>
 
             <div class="mt-5 flex flex-wrap gap-2">
-                <button
+                <Button
                     v-for="filter in platformFilters"
                     :key="filter.value"
                     type="button"
+                    :variant="platformFilter === filter.value ? 'default' : 'outline'"
+                    class="h-9 rounded-full px-4"
                     @click="platformFilter = filter.value"
-                    :class="platformFilter === filter.value
-                        ? 'border-blue-600 bg-blue-600 text-white shadow-sm'
-                        : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800'"
-                    class="rounded-full border px-4 py-2 text-sm font-semibold transition"
                 >
                     {{ filter.label }}
-                </button>
+                </Button>
             </div>
         </section>
 
@@ -120,9 +110,14 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import PageState from '@/components/PageState.vue'
+import Button from '@/components/ui/button/Button.vue'
+import Input from '@/components/ui/input/Input.vue'
+import Select from '@/components/ui/select/Select.vue'
 import { useApi } from '@/composables/useApi.js'
+import { useDateFormat } from '@/composables/useDateFormat.js'
 
-const { t, locale } = useI18n()
+const { t } = useI18n()
+const { formatDate } = useDateFormat()
 const { getGames } = useApi()
 
 const games = ref([])
@@ -138,6 +133,12 @@ const platformFilters = computed(() => [
     { value: 'windows', label: t('library.platformFilters.windows') },
     { value: 'deck', label: t('library.platformFilters.steamDeck') },
     { value: 'linux', label: t('library.platformFilters.linux') },
+])
+
+const sortOptions = computed(() => [
+    { value: 'playtime', label: t('library.sortBy.playtime') },
+    { value: 'name', label: t('library.sortBy.name') },
+    { value: 'last_played', label: t('library.sortBy.lastPlayed') },
 ])
 
 const totalHoursLabel = computed(() => {
@@ -156,11 +157,11 @@ const activePlatforms = (game) => {
 
 const formatLastPlayed = (timestamp) => {
     if (!timestamp) return '—'
-    return new Intl.DateTimeFormat(locale.value === 'ru' ? 'ru-RU' : 'en-US', {
-        year: 'numeric',
-        month: 'short',
+    return formatDate(new Date(timestamp * 1000), {
         day: 'numeric',
-    }).format(new Date(timestamp * 1000))
+        month: 'short',
+        year: 'numeric',
+    })
 }
 
 const fetchGames = async () => {
@@ -172,7 +173,7 @@ const fetchGames = async () => {
             sort: sortBy.value,
             platform: platformFilter.value,
         }
-        if (searchQuery.value) params.search = searchQuery.value
+        if (searchQuery.value.trim()) params.search = searchQuery.value.trim()
 
         const response = await getGames(params)
         games.value = (response.games || []).map((game) => ({ ...game, iconError: false }))
