@@ -6,6 +6,7 @@ namespace Tests\Feature\Integrations\Steam;
 
 use App\Dto\Steam\SteamGameDto;
 use App\Integrations\Steam\SteamApiClient;
+use Illuminate\Http\Client\Factory as HttpFactory;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
@@ -36,7 +37,7 @@ final class SteamApiClientTest extends TestCase
         ]);
 
         $client = new SteamApiClient(
-            http: app('http'),
+            http: app(HttpFactory::class),
             apiKey: 'test-key',
             steamId: '76561198000000000',
         );
