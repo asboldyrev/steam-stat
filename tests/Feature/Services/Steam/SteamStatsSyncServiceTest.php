@@ -108,6 +108,25 @@ final class SteamStatsSyncServiceTest extends TestCase
         self::assertSame(0, $snapshot->activityMinutes());
     }
 
+    public function test_activity_day_uses_configured_timezone_while_snapshot_is_stored_in_utc(): void
+    {
+        $this->configureSteam();
+        config(['steam-stat.timezone' => 'Asia/Barnaul']);
+
+        Http::fake([
+            'https://api.steampowered.com/*' => Http::response($this->steamResponse(180, 180, 0, 0)),
+        ]);
+
+        $service = $this->app->make(SteamStatsSyncService::class);
+        $service->sync(CarbonImmutable::parse('2026-08-19 18:30:00', 'UTC'));
+
+        $snapshot = PlaytimeSnapshot::query()->firstOrFail();
+        $dailyStat = GameStat::query()->firstOrFail();
+
+        self::assertSame('2026-08-19 18:30:00', $snapshot->captured_at->utc()->format('Y-m-d H:i:s'));
+        self::assertSame('2026-08-20', (string) $dailyStat->date);
+    }
+
     private function configureSteam(): void
     {
         config([
