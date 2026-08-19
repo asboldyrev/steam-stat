@@ -49,7 +49,7 @@
 
             <section class="grid gap-6 xl:grid-cols-[1.4fr_0.6fr]">
                 <div class="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-                    <div class="mb-6 flex items-center justify-between gap-4">
+                    <div class="mb-4 flex items-center justify-between gap-4">
                         <div>
                             <h3 class="text-lg font-bold text-gray-950 dark:text-white">{{ t('dashboard.activity7d.title') }}</h3>
                             <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ t('dashboard.activity7d.subtitle') }}</p>
@@ -59,18 +59,7 @@
                         </RouterLink>
                     </div>
 
-                    <div v-if="activity?.daily?.length" class="flex h-56 items-end gap-2 sm:gap-3">
-                        <div v-for="day in activity.daily" :key="day.date" class="flex min-w-0 flex-1 flex-col items-center gap-2">
-                            <div class="flex h-44 w-full items-end rounded-xl bg-gray-50 px-1 dark:bg-gray-800/60">
-                                <div
-                                    class="w-full rounded-lg bg-gradient-to-t from-blue-700 to-cyan-400 transition-all"
-                                    :style="{ height: `${dailyHeight(day.minutes)}%` }"
-                                    :title="`${day.date}: ${formatMinutes(day.minutes)}`"
-                                />
-                            </div>
-                            <span class="max-w-full truncate text-xs text-gray-500 dark:text-gray-400">{{ shortDate(day.date) }}</span>
-                        </div>
-                    </div>
+                    <BaseChart v-if="hasActivity" :option="activityChartOption" :height="280" />
                     <div v-else class="flex h-56 items-center justify-center text-sm text-gray-500 dark:text-gray-400">
                         {{ t('common.noData') }}
                     </div>
@@ -78,18 +67,7 @@
 
                 <div class="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
                     <h3 class="text-lg font-bold text-gray-950 dark:text-white">{{ t('dashboard.platformDistribution.title') }}</h3>
-                    <div v-if="platforms.length" class="mt-6 space-y-5">
-                        <div v-for="platform in platforms" :key="platform.name">
-                            <div class="mb-2 flex items-center justify-between gap-4 text-sm">
-                                <span class="font-medium text-gray-700 dark:text-gray-200">{{ platform.name }}</span>
-                                <span class="text-gray-500 dark:text-gray-400">{{ platform.percentage }}%</span>
-                            </div>
-                            <div class="h-2.5 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
-                                <div class="h-full rounded-full bg-blue-500" :style="{ width: `${platform.percentage}%` }" />
-                            </div>
-                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ platform.hours }}{{ t('common.hours.short') }}</p>
-                        </div>
-                    </div>
+                    <BaseChart v-if="platforms.length" :option="platformChartOption" :height="280" />
                     <p v-else class="mt-6 text-sm text-gray-500 dark:text-gray-400">{{ t('common.noData') }}</p>
                 </div>
             </section>
@@ -147,10 +125,13 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import BaseChart from '@/components/charts/BaseChart.vue'
 import PageState from '@/components/PageState.vue'
 import { useApi } from '@/composables/useApi.js'
+import { useTheme } from '@/composables/useTheme.js'
 
 const { t } = useI18n()
+const { isDark } = useTheme()
 const {
     getDashboardStats,
     getPlatformDistribution,
@@ -178,8 +159,6 @@ const formatMinutes = (minutes) => {
     const hours = Number(minutes || 0) / 60
     return `${hours >= 10 ? Math.round(hours) : hours.toFixed(1)}${t('common.hours.short')}`
 }
-
-const shortDate = (date) => date.slice(5)
 
 const lifetimeCards = computed(() => [
     {
@@ -232,8 +211,66 @@ const comparisonClass = computed(() => {
         : 'bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300'
 })
 
-const maxDaily = computed(() => Math.max(1, ...(activity.value?.daily || []).map((day) => Number(day.minutes || 0))))
-const dailyHeight = (minutes) => Math.max(minutes > 0 ? 5 : 0, Math.round((Number(minutes || 0) / maxDaily.value) * 100))
+const axisColor = computed(() => isDark.value ? '#9ca3af' : '#6b7280')
+const splitColor = computed(() => isDark.value ? '#374151' : '#e5e7eb')
+const hasActivity = computed(() => (activity.value?.daily || []).some((day) => Number(day.minutes) > 0))
+
+const activityChartOption = computed(() => ({
+    backgroundColor: 'transparent',
+    animationDuration: 350,
+    grid: { left: 12, right: 12, top: 20, bottom: 20, containLabel: true },
+    tooltip: {
+        trigger: 'axis',
+        formatter: (items) => {
+            const item = items?.[0]
+            return item ? `${item.axisValue}<br/>${formatMinutes(item.value)}` : ''
+        },
+    },
+    xAxis: {
+        type: 'category',
+        data: (activity.value?.daily || []).map((day) => day.date.slice(5)),
+        axisLine: { lineStyle: { color: splitColor.value } },
+        axisTick: { show: false },
+        axisLabel: { color: axisColor.value },
+    },
+    yAxis: {
+        type: 'value',
+        minInterval: 1,
+        axisLabel: { color: axisColor.value, formatter: (value) => formatMinutes(value) },
+        splitLine: { lineStyle: { color: splitColor.value } },
+    },
+    series: [{
+        type: 'bar',
+        data: (activity.value?.daily || []).map((day) => day.minutes),
+        barMaxWidth: 42,
+        itemStyle: { color: '#3b82f6', borderRadius: [8, 8, 2, 2] },
+        emphasis: { itemStyle: { color: '#06b6d4' } },
+    }],
+}))
+
+const platformChartOption = computed(() => ({
+    backgroundColor: 'transparent',
+    tooltip: {
+        trigger: 'item',
+        formatter: ({ name, value, percent }) => `${name}<br/>${value}${t('common.hours.short')} · ${percent}%`,
+    },
+    legend: {
+        bottom: 0,
+        textStyle: { color: axisColor.value },
+    },
+    series: [{
+        type: 'pie',
+        radius: ['48%', '72%'],
+        center: ['50%', '43%'],
+        padAngle: 2,
+        itemStyle: { borderRadius: 6 },
+        label: { show: false },
+        data: platforms.value.map((platform) => ({
+            name: platform.name,
+            value: platform.hours,
+        })),
+    }],
+}))
 
 const load = async () => {
     loading.value = true
