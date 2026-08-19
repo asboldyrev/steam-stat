@@ -1,121 +1,193 @@
 <template>
     <div class="space-y-8">
-        <!-- Library Header -->
-        <div class="flex items-center justify-between">
-            <div>
-                <h2 class="text-2xl font-bold text-gray-900 dark:text-white">{{ t('library.title') }}</h2>
-                <p class="text-gray-500 dark:text-gray-400 mt-2">{{ games.length }} {{ t('common.gameCount', games.length) }} • {{ t('library.totalHours', { hours: 5 }) }}</p>
-            </div>
-            <div class="flex items-center gap-4">
-                <div class="relative">
-                    <input type="text" :placeholder="t('library.filterPlaceholder')" v-model.lazy="searchQuery" class="pl-10 pr-4 py-2.5 bg-white dark:bg-gray-800 border border-steam rounded-xl w-64 focus:outline-none focus:ring-2 focus:ring-steam-blue placeholder-gray-400 dark:placeholder-gray-500" />
-                    <svg class="w-5 h-5 absolute left-3 top-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
+        <section class="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900 sm:p-6">
+            <div class="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
+                <div>
+                    <p class="text-sm font-medium uppercase tracking-[0.18em] text-gray-500 dark:text-gray-400">
+                        {{ t('library.overview.eyebrow') }}
+                    </p>
+                    <div class="mt-2 flex flex-wrap items-baseline gap-x-4 gap-y-2">
+                        <h3 class="text-3xl font-black tracking-tight text-gray-950 dark:text-white">{{ games.length }}</h3>
+                        <span class="text-gray-500 dark:text-gray-400">{{ t('common.gameCount', games.length) }}</span>
+                    </div>
+                    <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">{{ totalHoursLabel }}</p>
                 </div>
-                <select v-model="sortBy" class="px-4 py-2.5 bg-white dark:bg-gray-800 border border-steam rounded-xl focus:outline-none focus:ring-2 focus:ring-steam-blue">
-                    <option value="playtime">{{ t('library.sortBy.playtime') }}</option>
-                    <option value="name">{{ t('library.sortBy.name') }}</option>
-                    <option value="last_played">{{ t('library.sortBy.lastPlayed') }}</option>
-                </select>
+
+                <div class="grid gap-3 sm:grid-cols-2 xl:min-w-[620px]">
+                    <label class="block">
+                        <span class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{{ t('library.controls.search') }}</span>
+                        <input
+                            v-model.trim="searchQuery"
+                            type="search"
+                            :placeholder="t('library.filterPlaceholder')"
+                            class="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:focus:ring-blue-950"
+                        />
+                    </label>
+
+                    <label class="block">
+                        <span class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{{ t('library.controls.sort') }}</span>
+                        <select
+                            v-model="sortBy"
+                            class="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:focus:ring-blue-950"
+                        >
+                            <option value="playtime">{{ t('library.sortBy.playtime') }}</option>
+                            <option value="name">{{ t('library.sortBy.name') }}</option>
+                            <option value="last_played">{{ t('library.sortBy.lastPlayed') }}</option>
+                        </select>
+                    </label>
+                </div>
             </div>
-        </div>
 
-        <!-- Platform Filters -->
-        <div class="flex flex-wrap gap-3">
-            <button @click="platformFilter = 'all'" :class="platformFilter === 'all' ? 'bg-steam-blue text-white' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300'" class="px-4 py-2 border border-steam rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-smooth">
-                {{ t('library.platformFilters.all') }}
-            </button>
-            <button @click="platformFilter = 'windows'" :class="platformFilter === 'windows' ? 'bg-blue-600 text-white' : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'" class="px-4 py-2 border border-blue-200 dark:border-blue-800 rounded-xl hover:bg-blue-200 dark:hover:bg-blue-800/50 transition-smooth">
-                {{ t('library.platformFilters.windows') }}
-            </button>
-            <button @click="platformFilter = 'deck'" :class="platformFilter === 'deck' ? 'bg-green-600 text-white' : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'" class="px-4 py-2 border border-green-200 dark:border-green-800 rounded-xl hover:bg-green-200 dark:hover:bg-green-800/50 transition-smooth">
-                {{ t('library.platformFilters.steamDeck') }}
-            </button>
-            <button @click="platformFilter = 'linux'" :class="platformFilter === 'linux' ? 'bg-purple-600 text-white' : 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'" class="px-4 py-2 border border-purple-200 dark:border-purple-800 rounded-xl hover:bg-purple-200 dark:hover:bg-purple-800/50 transition-smooth">
-                {{ t('library.platformFilters.linux') }}
-            </button>
-        </div>
-
-        <!-- Games Grid -->
-        <div v-if="loading" class="text-center py-12">
-            <div class="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-steam-blue"></div>
-            <p class="mt-4 text-gray-500 dark:text-gray-400">{{ t('common.loading') }}</p>
-        </div>
-
-        <div v-else-if="error" class="text-center py-12">
-            <div class="text-red-500 dark:text-red-400 mb-4">
-                <svg class="w-12 h-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+            <div class="mt-5 flex flex-wrap gap-2">
+                <button
+                    v-for="filter in platformFilters"
+                    :key="filter.value"
+                    type="button"
+                    @click="platformFilter = filter.value"
+                    :class="platformFilter === filter.value
+                        ? 'border-blue-600 bg-blue-600 text-white shadow-sm'
+                        : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-gray-800'"
+                    class="rounded-full border px-4 py-2 text-sm font-semibold transition"
+                >
+                    {{ filter.label }}
+                </button>
             </div>
-            <p class="text-gray-700 dark:text-gray-300">{{ error }}</p>
-            <button @click="fetchGames" class="mt-4 px-6 py-2 bg-steam-blue text-white rounded-xl hover:bg-steam-blue-dark transition-smooth">
-                {{ t('common.retry') }}
-            </button>
-        </div>
+        </section>
 
-        <div v-else-if="games.length === 0" class="text-center py-12">
-            <p class="text-gray-500 dark:text-gray-400">{{ t('common.noData') }}</p>
-        </div>
+        <PageState
+            v-if="loading || error"
+            :loading="loading"
+            :error="error"
+            @retry="fetchGames"
+        />
 
-        <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            <router-link v-for="game in games" :key="game.id" :to="`/game/${game.id}`" class="bg-white dark:bg-gray-800 rounded-2xl border border-steam shadow-card hover:shadow-hover transition-smooth overflow-hidden group cursor-pointer block">
-                <GameCard :game="game" />
-            </router-link>
-        </div>
+        <PageState
+            v-else-if="games.length === 0"
+            :empty="true"
+        />
+
+        <section v-else class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+            <RouterLink
+                v-for="game in games"
+                :key="game.id"
+                :to="`/game/${game.id}`"
+                class="group overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg dark:border-gray-800 dark:bg-gray-900"
+            >
+                <div class="relative aspect-[16/8] overflow-hidden bg-gray-100 dark:bg-gray-800">
+                    <img
+                        v-if="game.icon_url && !game.iconError"
+                        :src="game.icon_url"
+                        :alt="game.name"
+                        class="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+                        @error="game.iconError = true"
+                    />
+                    <div v-else :class="game.gradient" class="flex h-full w-full items-center justify-center text-4xl font-black text-white">
+                        {{ game.abbreviation }}
+                    </div>
+                    <div class="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/70 to-transparent" />
+                    <div class="absolute bottom-3 left-4 right-4 flex items-end justify-between gap-3 text-white">
+                        <p class="min-w-0 truncate text-base font-bold">{{ game.name }}</p>
+                        <span class="shrink-0 rounded-full bg-black/35 px-2.5 py-1 text-xs font-semibold backdrop-blur">
+                            {{ game.total_time }}{{ t('common.hours.short') }}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="p-4">
+                    <div class="flex items-center justify-between gap-3">
+                        <div class="flex flex-wrap gap-1.5">
+                            <span
+                                v-for="platform in activePlatforms(game)"
+                                :key="platform"
+                                class="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-300"
+                            >
+                                {{ platform }}
+                            </span>
+                        </div>
+                        <span class="text-xs font-semibold text-blue-600 dark:text-blue-400">{{ t('library.gameCard.viewDetails') }}</span>
+                    </div>
+
+                    <p class="mt-4 text-xs text-gray-500 dark:text-gray-400">
+                        {{ t('library.gameCard.lastPlayed') }}: {{ formatLastPlayed(game.last_played) }}
+                    </p>
+                </div>
+            </RouterLink>
+        </section>
     </div>
 </template>
 
 <script setup>
-    import { ref, onMounted, watch } from 'vue'
-    import { useI18n } from 'vue-i18n'
-    import { useApi } from '@/composables/useApi'
-    import GameCard from '@/components/Library/GameCard.vue'
+import { computed, onMounted, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+import PageState from '@/components/PageState.vue'
+import { useApi } from '@/composables/useApi.js'
 
-    const { t } = useI18n()
-    const { getGames, } = useApi()
+const { t, locale } = useI18n()
+const { getGames } = useApi()
 
-    const games = ref([])
-    const loading = ref(false)
-    const error = ref(null)
+const games = ref([])
+const loading = ref(true)
+const error = ref('')
+const searchQuery = ref('')
+const sortBy = ref('playtime')
+const platformFilter = ref('all')
+let searchTimer = null
 
-    // Параметры фильтрации
-    const searchQuery = ref('')
-    const sortBy = ref('playtime')
-    const platformFilter = ref('all')
+const platformFilters = computed(() => [
+    { value: 'all', label: t('library.platformFilters.all') },
+    { value: 'windows', label: t('library.platformFilters.windows') },
+    { value: 'deck', label: t('library.platformFilters.steamDeck') },
+    { value: 'linux', label: t('library.platformFilters.linux') },
+])
 
-    const fetchGames = async () => {
-        loading.value = true
-        error.value = null
-        try {
-            const params = {}
-            if (searchQuery.value) params.search = searchQuery.value
-            if (sortBy.value) params.sort = sortBy.value
-            if (platformFilter.value && platformFilter.value !== 'all') params.platform = platformFilter.value
+const totalHoursLabel = computed(() => {
+    const total = games.value.reduce((sum, game) => sum + Number(game.total_time || 0), 0)
+    return t('library.totalHours', { hours: total })
+})
 
-            await getGames(params).then(response => {
-                const gamesData = response.games || []
-                // Добавляем поле iconError для отслеживания ошибок загрузки изображений
-                gamesData.forEach(game => {
-                    game.iconError = false
-                })
-                games.value = gamesData
-            })
-        } catch (err) {
-            console.error('Failed to fetch games:', err)
-            error.value = err.message || 'Unknown error'
-        } finally {
-            loading.value = false
+const activePlatforms = (game) => {
+    const result = []
+    if (game.platforms?.windows) result.push('Windows')
+    if (game.platforms?.deck) result.push('Steam Deck')
+    if (game.platforms?.linux) result.push('Linux')
+    if (game.platforms?.mac) result.push('macOS')
+    return result
+}
+
+const formatLastPlayed = (timestamp) => {
+    if (!timestamp) return '—'
+    return new Intl.DateTimeFormat(locale.value === 'ru' ? 'ru-RU' : 'en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+    }).format(new Date(timestamp * 1000))
+}
+
+const fetchGames = async () => {
+    loading.value = true
+    error.value = ''
+
+    try {
+        const params = {
+            sort: sortBy.value,
+            platform: platformFilter.value,
         }
+        if (searchQuery.value) params.search = searchQuery.value
+
+        const response = await getGames(params)
+        games.value = (response.games || []).map((game) => ({ ...game, iconError: false }))
+    } catch (requestError) {
+        error.value = requestError?.response?.data?.message || requestError.message || t('common.error')
+    } finally {
+        loading.value = false
     }
+}
 
-    onMounted(() => {
-        fetchGames()
-    })
+watch([sortBy, platformFilter], fetchGames)
+watch(searchQuery, () => {
+    clearTimeout(searchTimer)
+    searchTimer = setTimeout(fetchGames, 300)
+})
 
-    // Реактивные обновления при изменении фильтров (можно добавить debounce)
-    watch([searchQuery, sortBy, platformFilter], () => {
-        fetchGames()
-    })
+onMounted(fetchGames)
 </script>
