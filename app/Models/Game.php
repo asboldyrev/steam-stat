@@ -50,6 +50,14 @@ class Game extends Model
         );
     }
 
+    public function coverUrl(): string
+    {
+        return sprintf(
+            'https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/%d/header.jpg',
+            $this->app_id,
+        );
+    }
+
     public function storeUrl(): string
     {
         return 'https://store.steampowered.com/app/' . $this->app_id;
