@@ -189,17 +189,25 @@ const buildCoverCandidates = (game) => {
         if (url && !candidates.includes(url)) candidates.push(url)
     }
 
-    // Store metadata can point to a hashed asset directory. Try its HD sibling first,
-    // then the exact URL returned by Steam.
+    // Exact Store metadata may point to a hashed asset directory. Try its HD sibling
+    // first, then the exact URL returned by Steam.
     add(hdHeaderUrl(game.cover_url))
     add(game.cover_url)
 
-    // Older apps often still expose the non-hashed paths. They also give us a useful
-    // fallback when Store metadata could not be fetched for a particular game.
     if (game.app_id) {
-        const base = `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${game.app_id}`
-        add(`${base}/header_2x.jpg`)
-        add(`${base}/header.jpg`)
+        // The classic Steam CDN path is still the most reliable fallback for many older
+        // titles, even when the newer store_item_assets path is absent.
+        const classicBase = `https://cdn.cloudflare.steamstatic.com/steam/apps/${game.app_id}`
+        add(`${classicBase}/header_2x.jpg`)
+        add(`${classicBase}/header.jpg`)
+        add(`${classicBase}/capsule_616x353.jpg`)
+
+        // Newer Store assets use this host/path, sometimes with a hash directory which
+        // is handled above by game.cover_url. Keep the flat path as a final fallback.
+        const storeBase = `https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/${game.app_id}`
+        add(`${storeBase}/header_2x.jpg`)
+        add(`${storeBase}/header.jpg`)
+        add(`${storeBase}/capsule_616x353.jpg`)
     }
 
     return candidates
