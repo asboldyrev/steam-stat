@@ -46,7 +46,9 @@
                         :exact="item.exact"
                         @click="sidebarOpen = false"
                     >
-                        <component :is="item.icon" class="h-5 w-5" />
+                        <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="item.path" />
+                        </svg>
                         <span>{{ t(item.labelKey) }}</span>
                     </router-link>
                 </nav>
@@ -128,7 +130,7 @@
 </template>
 
 <script setup>
-import { computed, h, onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useTheme } from '@/composables/useTheme.js'
@@ -146,35 +148,22 @@ const loading = ref(false)
 const syncError = ref(null)
 const sidebarOpen = ref(false)
 
-const icon = (path) => ({
-    render() {
-        return h('svg', { fill: 'none', viewBox: '0 0 24 24', stroke: 'currentColor' }, [
-            h('path', {
-                'stroke-linecap': 'round',
-                'stroke-linejoin': 'round',
-                'stroke-width': 2,
-                d: path,
-            }),
-        ])
-    },
-})
-
 const navigation = [
     {
         to: '/',
         exact: true,
         labelKey: 'layout.menu.dashboard',
-        icon: icon('M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6'),
+        path: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6',
     },
     {
         to: '/activity',
         labelKey: 'layout.menu.activity',
-        icon: icon('M3 3v18h18M7 15l4-4 3 3 5-6'),
+        path: 'M3 3v18h18M7 15l4-4 3 3 5-6',
     },
     {
         to: '/library',
         labelKey: 'layout.menu.gameLibrary',
-        icon: icon('M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z'),
+        path: 'M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z',
     },
 ]
 
@@ -206,10 +195,7 @@ const handleSync = async () => {
     }
 }
 
-const currentPageTitle = computed(() => {
-    const key = route.meta.titleKey || 'layout.pageTitle.default'
-    return t(key)
-})
+const currentPageTitle = computed(() => t(route.meta.titleKey || 'layout.pageTitle.default'))
 
 onMounted(fetchLastSync)
 </script>
