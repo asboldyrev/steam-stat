@@ -128,10 +128,12 @@ import { useI18n } from 'vue-i18n'
 import BaseChart from '@/components/charts/BaseChart.vue'
 import PageState from '@/components/PageState.vue'
 import { useApi } from '@/composables/useApi.js'
+import { useDateFormat } from '@/composables/useDateFormat.js'
 import { useTheme } from '@/composables/useTheme.js'
 
 const { t } = useI18n()
 const { isDark } = useTheme()
+const { formatPeriod, formatShortDate } = useDateFormat()
 const {
     getDashboardStats,
     getPlatformDistribution,
@@ -184,7 +186,7 @@ const lifetimeCards = computed(() => [
 
 const activityPeriodLabel = computed(() => {
     if (!activity.value?.period) return ''
-    return `${activity.value.period.from} — ${activity.value.period.to}`
+    return formatPeriod(activity.value.period.from, activity.value.period.to)
 })
 
 const comparisonPercent = computed(() => {
@@ -228,7 +230,7 @@ const activityChartOption = computed(() => ({
     },
     xAxis: {
         type: 'category',
-        data: (activity.value?.daily || []).map((day) => day.date.slice(5)),
+        data: (activity.value?.daily || []).map((day) => formatShortDate(day.date)),
         axisLine: { lineStyle: { color: splitColor.value } },
         axisTick: { show: false },
         axisLabel: { color: axisColor.value },
