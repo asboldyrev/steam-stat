@@ -41,7 +41,9 @@ return new class extends Migration
                 $rows = [];
 
                 foreach ($stats as $stat) {
-                    $capturedAt = $stat->created_at ?? ($stat->date . ' 00:00:00');
+                    $capturedAt = $stat->updated_at
+                        ?? $stat->created_at
+                        ?? ($stat->date . ' 23:59:59');
                     $deltas = [
                         (int) $stat->delta_total_minutes,
                         (int) $stat->delta_windows_minutes,
@@ -68,8 +70,8 @@ return new class extends Migration
                         'delta_disconnected_minutes' => $stat->delta_disconnected_minutes,
                         'has_counter_correction' => collect($deltas)->contains(fn (int $delta): bool => $delta < 0),
                         'last_played_at' => $stat->last_played_at,
-                        'created_at' => $stat->created_at,
-                        'updated_at' => $stat->updated_at,
+                        'created_at' => $stat->created_at ?? $capturedAt,
+                        'updated_at' => $stat->updated_at ?? $capturedAt,
                     ];
                 }
 
