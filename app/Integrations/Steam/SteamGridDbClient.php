@@ -83,7 +83,12 @@ final class SteamGridDbClient
 
         $result = [];
         foreach ($aliases as $type => $keys) {
-            $url = $this->firstUrl($metadata, $keys);
+            $value = $this->firstValue($metadata, $keys);
+            if ($value === null) {
+                continue;
+            }
+
+            $url = $this->originalAssetUrl($appId, $type, $value);
             if ($url !== null) {
                 $result[$type] = ['url' => $url, 'source' => 'steam-original'];
             }
@@ -173,16 +178,51 @@ final class SteamGridDbClient
     /**
      * @param list<string> $keys
      */
-    private function firstUrl(array $data, array $keys): ?string
+    private function firstValue(array $data, array $keys): ?string
     {
         foreach ($keys as $key) {
             $value = $data[$key] ?? null;
-            if (is_string($value) && filter_var($value, FILTER_VALIDATE_URL) !== false) {
-                return $value;
+            if (is_string($value) && trim($value) !== '') {
+                return trim($value);
             }
         }
 
         return null;
+    }
+
+    private function originalAssetUrl(int $appId, string $type, string $value): ?string
+    {
+        if (filter_var($value, FILTER_VALIDATE_URL) !== false) {
+            return $value;
+        }
+
+        if ($type === 'client_icon' && preg_match('/^[a-f0-9]{40}$/i', $value) === 1) {
+            return sprintf(
+                'https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/%d/%s.ico',
+                $appId,
+                $value,
+            );
+        }
+
+        if ($type === 'icon' && preg_match('/^[a-f0-9]{40}$/i', $value) === 1) {
+            return sprintf(
+                'https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/%d/%s.jpg',
+                $appId,
+                $value,
+            );
+        }
+
+        // Some SteamGridDB metadata revisions expose the presence/hash of an original
+        // asset rather than its full URL. In that case use the same official Steam paths
+        // used by projects such as Hydra and Steam ROM Manager, but only because the
+        // original-asset metadata explicitly confirmed that this type exists.
+        return match ($type) {
+            'header' => "https://steamcdn-a.akamaihd.net/steam/apps/{$appId}/header.jpg",
+            'capsule' => "https://cdn.cloudflare.steamstatic.com/steam/apps/{$appId}/library_600x900.jpg",
+            'hero' => "https://steamcdn-a.akamaihd.net/steam/apps/{$appId}/library_hero.jpg",
+            'logo' => "https://cdn.cloudflare.steamstatic.com/steam/apps/{$appId}/logo.png",
+            default => null,
+        };
     }
 
     private function apiKey(): string
