@@ -4,20 +4,22 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
-use App\Actions\Steam\SyncGameStoreMetadata;
+use App\Actions\Steam\SyncGameArtwork;
 use App\Models\Game;
 use Illuminate\Console\Command;
 
 final class SyncSteamStoreMetadata extends Command
 {
     protected $signature = 'steam:sync-store-metadata
-        {--force : Refresh metadata even when it is still fresh}
-        {--delay=750 : Delay between Store API requests in milliseconds}';
+        {--force : Refresh artwork even when it is still fresh}
+        {--delay=750 : Delay between games in milliseconds}';
 
-    protected $description = 'Cache optional Steam Store metadata for tracked games';
+    protected $description = 'Deprecated alias for steam:sync-artwork';
 
-    public function handle(SyncGameStoreMetadata $action): int
+    public function handle(SyncGameArtwork $action): int
     {
+        $this->warn('steam:sync-store-metadata is deprecated; use steam:sync-artwork instead.');
+
         $force = (bool) $this->option('force');
         $delayMs = max(0, (int) $this->option('delay'));
         $updated = 0;
@@ -25,17 +27,14 @@ final class SyncSteamStoreMetadata extends Command
 
         Game::query()
             ->orderBy('id')
-            ->chunkById(50, function ($games) use ($action, $force, $delayMs, &$updated, &$attempted): void {
+            ->chunkById(25, function ($games) use ($action, $force, $delayMs, &$updated, &$attempted): void {
                 foreach ($games as $game) {
-                    $before = $game->store_metadata_synced_at;
-                    $refreshed = $action->execute($game, $force);
-
-                    if (!$force && $before?->isAfter(now()->subDays(30))) {
+                    if (!$force && $game->artwork_synced_at?->isAfter(now()->subDays(30))) {
                         continue;
                     }
 
                     $attempted++;
-                    if ($refreshed) {
+                    if ($action->execute($game, $force)) {
                         $updated++;
                     }
 
@@ -45,7 +44,7 @@ final class SyncSteamStoreMetadata extends Command
                 }
             });
 
-        $this->info("Steam Store metadata refreshed for {$updated} of {$attempted} attempted games.");
+        $this->info("Artwork refreshed for {$updated} of {$attempted} attempted games.");
 
         return self::SUCCESS;
     }
