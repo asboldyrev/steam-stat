@@ -9,108 +9,9 @@ use App\Models\Game;
 use App\Models\GameStat;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 final class GameController extends Controller
 {
-    public function index(Request $request): JsonResponse
-    {
-        $search = $request->query('search');
-        $sort = $request->query('sort', 'playtime');
-        $platform = $request->query('platform', 'all');
-
-        $latestStats = GameStat::query()
-            ->select('game_id', DB::raw('MAX(date) as max_date'))
-            ->groupBy('game_id')
-            ->get()
-            ->pluck('max_date', 'game_id');
-
-        if ($latestStats->isEmpty()) {
-            return response()->json(['games' => []]);
-        }
-
-        $gameIds = $latestStats->keys()->toArray();
-
-        $query = GameStat::query()
-            ->with('game')
-            ->whereIn('game_id', $gameIds)
-            ->where(function ($query) use ($latestStats) {
-                foreach ($latestStats as $gameId => $date) {
-                    $query->orWhere(function ($q) use ($gameId, $date) {
-                        $q->where('game_id', $gameId)->where('date', $date);
-                    });
-                }
-            });
-
-        if ($platform !== 'all') {
-            $query->where(function ($q) use ($platform) {
-                match ($platform) {
-                    'windows' => $q->where('windows_minutes', '>', 0),
-                    'deck' => $q->where('deck_minutes', '>', 0),
-                    'linux' => $q->where('linux_minutes', '>', 0),
-                    'mac' => $q->where('mac_minutes', '>', 0),
-                    default => null,
-                };
-            });
-        }
-
-        if ($search) {
-            $query->whereHas('game', function ($q) use ($search) {
-                $q->where('name', 'like', '%' . $search . '%');
-            });
-        }
-
-        match ($sort) {
-            'name' => $query->orderBy(
-                Game::select('name')
-                    ->whereColumn('games.id', 'game_stats.game_id')
-                    ->limit(1),
-                'asc'
-            ),
-            'last_played' => $query->orderByDesc('last_played_at'),
-            default => $query->orderByDesc('total_minutes'),
-        };
-
-        $stats = $query->get();
-
-        $gradients = [
-            'bg-gradient-to-br from-blue-600 to-cyan-500',
-            'bg-gradient-to-br from-green-600 to-emerald-500',
-            'bg-gradient-to-br from-purple-600 to-pink-500',
-            'bg-gradient-to-br from-yellow-600 to-orange-500',
-            'bg-gradient-to-br from-red-600 to-rose-500',
-            'bg-gradient-to-br from-indigo-600 to-violet-500',
-        ];
-
-        $games = [];
-        foreach ($stats as $index => $stat) {
-            $game = $stat->game;
-            $abbreviation = $this->generateAbbreviation($game->name);
-            $totalHours = (int) round($stat->total_minutes / 60);
-            $gradient = $gradients[$index % count($gradients)];
-
-            $games[] = [
-                'id' => $game->id,
-                'app_id' => $game->app_id,
-                'name' => $game->name,
-                'abbreviation' => $abbreviation,
-                'artwork' => $game->artwork ?? [],
-                'gradient' => $gradient,
-                'total_time' => $totalHours,
-                'last_played' => $stat->last_played_at?->timestamp,
-                'platforms' => [
-                    'windows' => $stat->windows_minutes > 0,
-                    'deck' => $stat->deck_minutes > 0,
-                    'linux' => $stat->linux_minutes > 0,
-                    'mac' => $stat->mac_minutes > 0,
-                ],
-            ];
-        }
-
-        return response()->json(['games' => $games]);
-    }
-
     public function show(Game $game): JsonResponse
     {
         $latestStat = $game->gameStats()->latest('date')->first();
@@ -157,7 +58,7 @@ final class GameController extends Controller
             }
         }
 
-        usort($platforms, fn($a, $b) => $b['hours'] <=> $a['hours']);
+        usort($platforms, fn ($a, $b) => $b['hours'] <=> $a['hours']);
 
         return response()->json(['platforms' => $platforms]);
     }
