@@ -49,6 +49,11 @@ export function useApi() {
         return data;
     };
 
+    const getGameDetail = async (id, params = {}) => {
+        const { data } = await api.get(`/games/${id}/detail`, { params });
+        return data;
+    };
+
     const getGamePlatformBreakdown = async (id) => {
         const { data } = await api.get(`/games/${id}/platform-breakdown`);
         return data;
@@ -84,6 +89,7 @@ export function useApi() {
         getActivityInsights,
         getGames,
         getGame,
+        getGameDetail,
         getGamePlatformBreakdown,
         getGamePlaytimeHistory,
         getGameRecentSessions,
