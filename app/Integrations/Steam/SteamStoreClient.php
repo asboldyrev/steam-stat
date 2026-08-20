@@ -45,29 +45,12 @@ final class SteamStoreClient
             $result['capsule'] = ['url' => $capsule, 'source' => 'steam-store'];
         }
 
-        // appdetails does not expose the real Steam library hero/logo/client icon fields.
-        // background is still useful as a last-resort hero, but original SteamGridDB
-        // metadata is preferred by the artwork synchronizer when it is available.
         $hero = $this->firstString($data, ['background_raw', 'background']);
         if ($hero !== null) {
             $result['hero'] = ['url' => $hero, 'source' => 'steam-store'];
         }
 
         return $result;
-    }
-
-    /**
-     * Kept for compatibility with the old metadata synchronizer while artwork migration
-     * is being rolled out.
-     *
-     * @return array{cover_url:string}|null
-     */
-    public function fetchGameMetadata(int $appId): ?array
-    {
-        $artwork = $this->fetchArtwork($appId);
-        $url = $artwork['header']['url'] ?? null;
-
-        return is_string($url) ? ['cover_url' => $url] : null;
     }
 
     private function client(): PendingRequest
