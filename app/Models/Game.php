@@ -15,15 +15,19 @@ class Game extends Model
         'name',
         'icon_url',
         'cover_url',
+        'artwork',
         'has_community_visible_stats',
         'store_metadata_synced_at',
+        'artwork_synced_at',
     ];
 
     protected function casts(): array
     {
         return [
+            'artwork' => 'array',
             'has_community_visible_stats' => 'boolean',
             'store_metadata_synced_at' => 'immutable_datetime',
+            'artwork_synced_at' => 'immutable_datetime',
         ];
     }
 
@@ -60,9 +64,26 @@ class Game extends Model
         );
     }
 
+    public function artworkUrl(string $type): ?string
+    {
+        $item = $this->artwork[$type] ?? null;
+        if (!is_array($item)) {
+            return null;
+        }
+
+        $localUrl = $item['local_url'] ?? null;
+        if (is_string($localUrl) && $localUrl !== '') {
+            return $localUrl;
+        }
+
+        $url = $item['url'] ?? null;
+
+        return is_string($url) && $url !== '' ? $url : null;
+    }
+
     public function coverUrl(): ?string
     {
-        return $this->cover_url;
+        return $this->artworkUrl('header') ?? $this->cover_url;
     }
 
     public function storeUrl(): string
