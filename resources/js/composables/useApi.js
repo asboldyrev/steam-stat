@@ -44,28 +44,8 @@ export function useApi() {
         return data;
     };
 
-    const getGame = async (id) => {
-        const { data } = await api.get(`/games/${id}`);
-        return data;
-    };
-
     const getGameDetail = async (id, params = {}) => {
         const { data } = await api.get(`/games/${id}/detail`, { params });
-        return data;
-    };
-
-    const getGamePlatformBreakdown = async (id) => {
-        const { data } = await api.get(`/games/${id}/platform-breakdown`);
-        return data;
-    };
-
-    const getGamePlaytimeHistory = async (id) => {
-        const { data } = await api.get(`/games/${id}/playtime-history`);
-        return data;
-    };
-
-    const getGameRecentSessions = async (id) => {
-        const { data } = await api.get(`/games/${id}/recent-sessions`);
         return data;
     };
 
@@ -88,11 +68,7 @@ export function useApi() {
         getActivity,
         getActivityInsights,
         getGames,
-        getGame,
         getGameDetail,
-        getGamePlatformBreakdown,
-        getGamePlaytimeHistory,
-        getGameRecentSessions,
         getLastSync,
         triggerSync,
     };
