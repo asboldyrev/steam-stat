@@ -6,11 +6,11 @@
             <article class="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
                 <div class="relative min-h-56 overflow-hidden bg-gray-100 dark:bg-gray-800 sm:min-h-72">
                     <img
-                        v-if="game.cover_url && !coverError"
-                        :src="game.cover_url"
+                        v-if="heroUrl && !heroError"
+                        :src="heroUrl"
                         :alt="game.name"
                         class="absolute inset-0 h-full w-full object-cover"
-                        @error="coverError = true"
+                        @error="heroError = true"
                     />
                     <div v-else class="absolute inset-0 bg-gradient-to-br from-blue-700 via-slate-800 to-cyan-700" />
                     <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/10" />
@@ -18,8 +18,8 @@
                     <div class="relative flex min-h-56 flex-col justify-end p-5 text-white sm:min-h-72 sm:p-7">
                         <div class="flex items-end gap-4">
                             <img
-                                v-if="game.icon_url && !iconError"
-                                :src="game.icon_url"
+                                v-if="clientIconUrl && !iconError"
+                                :src="clientIconUrl"
                                 :alt="game.name"
                                 class="h-16 w-16 rounded-2xl object-contain shadow-xl ring-1 ring-white/20 sm:h-20 sm:w-20"
                                 @error="iconError = true"
@@ -110,12 +110,14 @@ import PageState from '@/components/PageState.vue'
 import Button from '@/components/ui/button/Button.vue'
 import DateRangePicker from '@/components/ui/date-range-picker/DateRangePicker.vue'
 import { useApi } from '@/composables/useApi.js'
+import { useArtwork } from '@/composables/useArtwork.js'
 import { useDateFormat } from '@/composables/useDateFormat.js'
 import { useTheme } from '@/composables/useTheme.js'
 
 const { t } = useI18n()
 const route = useRoute()
 const { getGameDetail } = useApi()
+const { firstAssetUrl } = useArtwork()
 const { formatLongDate, formatPeriod, formatShortDate } = useDateFormat()
 const { isDark } = useTheme()
 
@@ -134,8 +136,11 @@ const dateRange = ref({ from: toDateInput(thirtyDaysAgo), to: toDateInput(today)
 const game = ref(null)
 const loading = ref(true)
 const error = ref('')
-const coverError = ref(false)
+const heroError = ref(false)
 const iconError = ref(false)
+
+const heroUrl = computed(() => firstAssetUrl(game.value?.artwork, ['hero', 'header']))
+const clientIconUrl = computed(() => firstAssetUrl(game.value?.artwork, ['client_icon', 'icon']))
 
 const formatMinutes = (minutes) => {
     const value = Number(minutes || 0)
@@ -222,7 +227,7 @@ const load = async () => {
 
     try {
         game.value = await getGameDetail(gameId, { from: dateRange.value.from, to: dateRange.value.to })
-        coverError.value = false
+        heroError.value = false
         iconError.value = false
     } catch (requestError) {
         error.value = requestError?.response?.data?.message || requestError.message || t('common.error')
