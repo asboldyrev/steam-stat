@@ -48,10 +48,13 @@ final class ArtworkStorage
 
         Storage::disk('public')->put($path, $body);
 
+        $localUrl = Storage::disk('public')->url($path)
+            . '?v=' . substr(sha1($body), 0, 12);
+
         return [
             'url' => $url,
             'local_path' => $path,
-            'local_url' => Storage::disk('public')->url($path),
+            'local_url' => $localUrl,
             'source' => (string) ($asset['source'] ?? 'unknown'),
             'width' => $width,
             'height' => $height,
