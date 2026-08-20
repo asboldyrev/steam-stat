@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Steam;
 
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 
@@ -20,13 +21,20 @@ final class ArtworkStorage
             return null;
         }
 
-        $response = Http::withHeaders([
-            'User-Agent' => 'SteamStat/1.0',
-            'Accept' => 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
-        ])
-            ->timeout(20)
-            ->retry(2, 500, throw: false)
-            ->get($url);
+        try {
+            $response = Http::withHeaders([
+                'User-Agent' => 'SteamStat/1.0',
+                'Accept' => 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+            ])
+                ->connectTimeout(8)
+                ->timeout(20)
+                ->retry(2, 500, throw: false)
+                ->get($url);
+        } catch (ConnectionException) {
+            // Artwork is optional enrichment. A single slow/unreachable CDN must not
+            // abort the whole sync; the caller can keep the remote URL and continue.
+            return null;
+        }
 
         if (!$response->successful()) {
             return null;
