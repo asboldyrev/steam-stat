@@ -16,11 +16,7 @@
                 <div class="grid gap-3 sm:grid-cols-2 xl:min-w-[620px]">
                     <label class="block">
                         <span class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{{ t('library.controls.search') }}</span>
-                        <Input
-                            v-model="searchQuery"
-                            type="search"
-                            :placeholder="t('library.filterPlaceholder')"
-                        />
+                        <Input v-model="searchQuery" type="search" :placeholder="t('library.filterPlaceholder')" />
                     </label>
 
                     <label class="block">
@@ -44,17 +40,8 @@
             </div>
         </section>
 
-        <PageState
-            v-if="loading || error"
-            :loading="loading"
-            :error="error"
-            @retry="fetchGames"
-        />
-
-        <PageState
-            v-else-if="games.length === 0"
-            :empty="true"
-        />
+        <PageState v-if="loading || error" :loading="loading" :error="error" @retry="fetchGames" />
+        <PageState v-else-if="games.length === 0" :empty="true" />
 
         <section v-else class="grid gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
             <RouterLink
@@ -65,22 +52,18 @@
             >
                 <div class="relative aspect-[920/430] overflow-hidden bg-gray-100 dark:bg-gray-800">
                     <img
-                        v-if="game.cover_url && !game.coverError"
-                        :src="game.cover_url"
+                        v-if="headerUrl(game) && !game.headerError"
+                        :src="headerUrl(game)"
                         :alt="game.name"
                         class="h-full w-full object-cover transition duration-300 group-hover:scale-[1.015]"
                         loading="lazy"
-                        @error="game.coverError = true"
+                        @error="game.headerError = true"
                     />
 
-                    <div
-                        v-else
-                        :class="game.gradient"
-                        class="flex h-full w-full items-center justify-center"
-                    >
+                    <div v-else :class="game.gradient" class="flex h-full w-full items-center justify-center">
                         <img
-                            v-if="game.icon_url && !game.iconError"
-                            :src="game.icon_url"
+                            v-if="iconUrl(game) && !game.iconError"
+                            :src="iconUrl(game)"
                             :alt="game.name"
                             class="h-16 w-16 rounded-2xl object-contain shadow-lg ring-1 ring-white/20"
                             @error="game.iconError = true"
@@ -132,10 +115,12 @@ import Button from '@/components/ui/button/Button.vue'
 import Input from '@/components/ui/input/Input.vue'
 import Select from '@/components/ui/select/Select.vue'
 import { useApi } from '@/composables/useApi.js'
+import { useArtwork } from '@/composables/useArtwork.js'
 import { useDateFormat } from '@/composables/useDateFormat.js'
 
 const { t } = useI18n()
 const { formatDate } = useDateFormat()
+const { assetUrl } = useArtwork()
 const { getGames } = useApi()
 
 const games = ref([])
@@ -164,6 +149,9 @@ const totalHoursLabel = computed(() => {
     return t('library.totalHours', { hours: total })
 })
 
+const headerUrl = (game) => assetUrl(game.artwork, 'header')
+const iconUrl = (game) => assetUrl(game.artwork, 'icon')
+
 const activePlatforms = (game) => {
     const result = []
     if (game.platforms?.windows) result.push('Windows')
@@ -183,16 +171,13 @@ const fetchGames = async () => {
     error.value = ''
 
     try {
-        const params = {
-            sort: sortBy.value,
-            platform: platformFilter.value,
-        }
+        const params = { sort: sortBy.value, platform: platformFilter.value }
         if (searchQuery.value.trim()) params.search = searchQuery.value.trim()
 
         const response = await getGames(params)
         games.value = (response.games || []).map((game) => ({
             ...game,
-            coverError: false,
+            headerError: false,
             iconError: false,
         }))
     } catch (requestError) {
