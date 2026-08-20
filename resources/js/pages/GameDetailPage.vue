@@ -1,165 +1,235 @@
 <template>
-    <div class="space-y-8">
-        <!-- Game Header -->
-        <div class="flex items-start justify-between">
-            <div class="flex items-center gap-6">
-                <div v-if="loading.game" class="w-24 h-24 rounded-2xl bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
-                <div v-else class="w-24 h-24 rounded-2xl overflow-hidden bg-gradient-to-br from-blue-600 to-cyan-500 flex items-center justify-center">
-                    <img v-if="game.icon_url" :src="game.icon_url" :alt="game.name" class="w-full h-full object-cover" @error="game.iconError = true" v-show="!game.iconError" />
-                    <div class="w-full h-full flex items-center justify-center text-white text-3xl font-bold" :class="{ 'hidden': game.icon_url && !game.iconError }">
-                        {{ game.abbreviation }}
-                    </div>
-                </div>
-                <div>
-                    <h1 v-if="loading.game" class="text-4xl font-bold text-gray-900 dark:text-white animate-pulse bg-gray-200 dark:bg-gray-700 rounded h-10 w-64"></h1>
-                    <h1 v-else class="text-4xl font-bold text-gray-900 dark:text-white">{{ game.name }}</h1>
-                </div>
-            </div>
-        </div>
+    <section class="space-y-6">
+        <PageState v-if="loading || error" :loading="loading" :error="error" @retry="load" />
 
-        <!-- Stats Overview -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
-            <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-steam shadow-card">
-                <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('gameDetail.totalPlaytime') }}</p>
-                <h3 v-if="loading.game" class="text-3xl font-bold text-gray-900 dark:text-white mt-2 animate-pulse bg-gray-200 dark:bg-gray-700 rounded h-10 w-24"></h3>
-                <h3 v-else class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ game.total_playtime_hours }} {{ t('common.hours.full', game.total_playtime_hours) }}</h3>
-            </div>
+        <template v-else-if="game">
+            <article class="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
+                <div class="relative min-h-56 overflow-hidden bg-gray-100 dark:bg-gray-800 sm:min-h-72">
+                    <img
+                        v-if="game.cover_url && !coverError"
+                        :src="game.cover_url"
+                        :alt="game.name"
+                        class="absolute inset-0 h-full w-full object-cover"
+                        @error="coverError = true"
+                    />
+                    <div v-else class="absolute inset-0 bg-gradient-to-br from-blue-700 via-slate-800 to-cyan-700" />
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/10" />
 
-            <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-steam shadow-card">
-                <p class="text-sm text-gray-500 dark:text-gray-400">{{ t('gameDetail.lastPlayed') }}</p>
-                <h3 v-if="loading.game" class="text-3xl font-bold text-gray-900 dark:text-white mt-2 animate-pulse bg-gray-200 dark:bg-gray-700 rounded h-10 w-24"></h3>
-                <h3 v-else class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ dayjs.unix(game.last_played).fromNow() }}</h3>
-            </div>
-        </div>
-
-        <!-- Platform Breakdown & Chart -->
-        <div class="grid grid-cols-1 lg:grid-cols-1 gap-8">
-            <!-- Platform Breakdown -->
-            <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-steam shadow-card">
-                <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-6">{{ t('gameDetail.platformUsage') }}</h3>
-                <div v-if="loading.platform" class="space-y-6">
-                    <div v-for="n in 3" :key="n" class="animate-pulse">
-                        <div class="flex items-center justify-between mb-2">
-                            <div class="flex items-center gap-3">
-                                <div class="w-3 h-3 rounded-full bg-gray-300 dark:bg-gray-600"></div>
-                                <span class="font-medium text-gray-300 dark:text-gray-600 bg-gray-300 dark:bg-gray-600 rounded h-4 w-24"></span>
+                    <div class="relative flex min-h-56 flex-col justify-end p-5 text-white sm:min-h-72 sm:p-7">
+                        <div class="flex items-end gap-4">
+                            <img
+                                v-if="game.icon_url && !iconError"
+                                :src="game.icon_url"
+                                :alt="game.name"
+                                class="h-16 w-16 rounded-2xl object-contain shadow-xl ring-1 ring-white/20 sm:h-20 sm:w-20"
+                                @error="iconError = true"
+                            />
+                            <div class="min-w-0 flex-1">
+                                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-white/65">Steam App {{ game.app_id }}</p>
+                                <h1 class="mt-1 text-2xl font-black tracking-tight sm:text-4xl">{{ game.name }}</h1>
+                                <p class="mt-2 text-sm text-white/70">{{ t('gameDetail.lastPlayed') }}: {{ lastPlayedLabel }}</p>
                             </div>
-                            <span class="font-bold text-gray-300 dark:text-gray-600 bg-gray-300 dark:bg-gray-600 rounded h-4 w-20"></span>
-                        </div>
-                        <div class="w-full h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                            <div class="h-full bg-gray-300 dark:bg-gray-600 rounded-full" style="width: 30%"></div>
+                            <a
+                                :href="game.store_url"
+                                target="_blank"
+                                rel="noreferrer"
+                                class="hidden rounded-xl bg-white/10 px-4 py-2.5 text-sm font-semibold backdrop-blur transition hover:bg-white/20 sm:inline-flex"
+                            >
+                                {{ t('gameDetail.openSteam') }}
+                            </a>
                         </div>
                     </div>
                 </div>
+            </article>
 
-                <div v-else class="space-y-6">
-                    <div v-for="platform in platformBreakdown.platforms" :key="platform.name">
-                        <div class="flex items-center justify-between mb-2">
-                            <div class="flex items-center gap-3">
-                                <div class="w-3 h-3 rounded-full" :class="platform.color"></div>
-                                <span class="font-medium text-gray-700 dark:text-gray-300">{{ platform.name }}</span>
-                            </div>
-                            <span class="font-bold text-gray-700 dark:text-gray-300">{{ platform.hours }} {{ t('common.hours.full', platform.hours) }} ({{ platform.percentage }}%)</span>
-                        </div>
-                        <div class="w-full h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                            <div class="h-full rounded-full" :class="platform.color" :style="{ width: platform.percentage + '%' }"></div>
-                        </div>
-                    </div>
-                </div>
+            <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <article v-for="card in summaryCards" :key="card.label" class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+                    <p class="text-sm text-gray-500 dark:text-gray-400">{{ card.label }}</p>
+                    <p class="mt-2 text-2xl font-bold text-gray-950 dark:text-white">{{ card.value }}</p>
+                    <p v-if="card.hint" class="mt-1 text-xs text-gray-400">{{ card.hint }}</p>
+                </article>
             </div>
 
-            <!-- Playtime History -->
-            <div class="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-steam shadow-card">
-                <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-6">{{ t('gameDetail.playtimeHistory') }}</h3>
-                <div v-if="loading.history" class="space-y-4">
-                    <div v-for="n in 7" :key="n" class="animate-pulse flex items-center justify-between">
-                        <div class="flex items-center gap-4">
-                            <div class="w-10 h-6 bg-gray-300 dark:bg-gray-600 rounded"></div>
-                            <div class="w-16 h-4 bg-gray-300 dark:bg-gray-600 rounded"></div>
-                        </div>
-                        <div class="w-24 h-4 bg-gray-300 dark:bg-gray-600 rounded"></div>
+            <article class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                    <div class="space-y-1.5">
+                        <span class="text-sm text-gray-600 dark:text-gray-400">{{ t('gameDetail.period') }}</span>
+                        <DateRangePicker v-model="dateRange" />
                     </div>
+                    <Button type="button" @click="load">{{ t('gameDetail.apply') }}</Button>
                 </div>
-                <div v-else-if="playtimeHistory.history.length === 0" class="text-center py-8 text-gray-500 dark:text-gray-400">
-                    {{ t('gameDetail.noPlaytimeHistory') }}
-                </div>
-                <div v-else class="space-y-4">
-                    <div v-for="item in playtimeHistory.history" :key="item.day" class="flex items-center justify-between">
-                        <div class="flex items-center gap-4">
-                            <div class="w-10 text-center font-medium text-gray-700 dark:text-gray-300">{{ dayjs(item.day).format('dd') }}</div>
-                            <div class="flex items-center gap-2">
-                                <div class="w-3 h-3 rounded-full" :class="item.color"></div>
-                                <span class="text-sm text-gray-600 dark:text-gray-400">{{ item.platform }}</span>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-4">
-                            <span class="font-medium text-gray-700 dark:text-gray-300">{{ dayjs.duration({ minutes: item.minutes }).humanize() }}</span>
-                            <div class="w-32 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                                <div class="h-full rounded-full" :class="item.color" :style="{ width: item.percentage + '%' }"></div>
+            </article>
+
+            <div class="grid gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
+                <article class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+                    <div class="mb-4">
+                        <h2 class="font-semibold text-gray-950 dark:text-white">{{ t('gameDetail.playtimeHistory') }}</h2>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">{{ periodLabel }}</p>
+                    </div>
+                    <BaseChart v-if="hasActivity" :option="activityChartOption" :height="300" />
+                    <PageState v-else :message="t('gameDetail.noActivity')" />
+                </article>
+
+                <article class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+                    <h2 class="font-semibold text-gray-950 dark:text-white">{{ t('gameDetail.platformUsage') }}</h2>
+                    <BaseChart v-if="game.platforms.length" :option="platformChartOption" :height="300" />
+                    <PageState v-else :message="t('gameDetail.noActivity')" />
+                </article>
+            </div>
+
+            <article class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+                <div class="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                    <div class="min-w-0 flex-1">
+                        <h2 class="font-semibold text-gray-950 dark:text-white">{{ t('gameDetail.lifetimePlatforms') }}</h2>
+                        <div class="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                            <div v-for="platform in lifetimePlatforms" :key="platform.name" class="rounded-xl bg-gray-50 p-4 dark:bg-gray-800/70">
+                                <p class="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">{{ platform.name }}</p>
+                                <p class="mt-1 text-lg font-bold text-gray-950 dark:text-white">{{ formatMinutes(platform.minutes) }}</p>
                             </div>
                         </div>
                     </div>
+
+                    <div v-if="game.lifetime.disconnected_minutes > 0" class="w-full rounded-xl border border-dashed border-gray-300 p-4 dark:border-gray-700 lg:max-w-xs">
+                        <p class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{{ t('gameDetail.diagnostics') }}</p>
+                        <p class="mt-2 text-sm text-gray-600 dark:text-gray-300">
+                            {{ t('gameDetail.disconnected') }}: {{ formatMinutes(game.lifetime.disconnected_minutes) }}
+                        </p>
+                    </div>
                 </div>
-            </div>
-        </div>
-    </div>
+            </article>
+        </template>
+    </section>
 </template>
 
 <script setup>
-    import dayjs from '@/bootstrap/dayjs.js'
-    import { ref, onMounted } from 'vue'
-    import { useI18n } from 'vue-i18n'
-    import { useRoute } from 'vue-router'
-    import { useApi } from '@/composables/useApi'
+import { computed, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { useRoute } from 'vue-router'
+import BaseChart from '@/components/charts/BaseChart.vue'
+import PageState from '@/components/PageState.vue'
+import Button from '@/components/ui/button/Button.vue'
+import DateRangePicker from '@/components/ui/date-range-picker/DateRangePicker.vue'
+import { useApi } from '@/composables/useApi.js'
+import { useDateFormat } from '@/composables/useDateFormat.js'
+import { useTheme } from '@/composables/useTheme.js'
 
-    const { t } = useI18n()
-    const route = useRoute()
-    const { getGame, getGamePlatformBreakdown, getGamePlaytimeHistory, getGameRecentSessions } = useApi()
+const { t } = useI18n()
+const route = useRoute()
+const { getGameDetail } = useApi()
+const { formatLongDate, formatPeriod, formatShortDate } = useDateFormat()
+const { isDark } = useTheme()
 
-    const game = ref({})
-    const platformBreakdown = ref({ platforms: [] })
-    const playtimeHistory = ref({ history: [] })
-    const loading = ref({
-        game: false,
-        platform: false,
-        history: false,
-        sessions: false
-    })
-    const error = ref(null)
+const today = new Date()
+const thirtyDaysAgo = new Date(today)
+thirtyDaysAgo.setDate(today.getDate() - 29)
 
-    const fetchGameData = async () => {
-        const gameId = route.params.id
-        if (!gameId) return
+const toDateInput = (date) => {
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+}
 
-        try {
-            loading.value.game = true
-            loading.value.platform = true
-            loading.value.history = true
-            loading.value.sessions = true
+const dateRange = ref({ from: toDateInput(thirtyDaysAgo), to: toDateInput(today) })
+const game = ref(null)
+const loading = ref(true)
+const error = ref('')
+const coverError = ref(false)
+const iconError = ref(false)
 
-            const [gameData, platformData, historyData] = await Promise.all([
-                getGame(gameId),
-                getGamePlatformBreakdown(gameId),
-                getGamePlaytimeHistory(gameId),
-            ])
+const formatMinutes = (minutes) => {
+    const value = Number(minutes || 0)
+    const hours = value / 60
+    return `${hours >= 10 ? Math.round(hours) : hours.toFixed(1)}${t('common.hours.short')}`
+}
 
-            // Добавляем поле iconError для отслеживания ошибок загрузки изображения
-            gameData.iconError = false
-            game.value = gameData
-            platformBreakdown.value = platformData
-            playtimeHistory.value = historyData
-        } catch (err) {
-            console.error('Failed to fetch game data:', err)
-            error.value = err.message || 'Unknown error'
-        } finally {
-            loading.value.game = false
-            loading.value.platform = false
-            loading.value.history = false
-            loading.value.sessions = false
-        }
+const lastPlayedLabel = computed(() => game.value?.last_played_at ? formatLongDate(game.value.last_played_at) : '—')
+const periodLabel = computed(() => game.value ? formatPeriod(game.value.period.from, game.value.period.to) : '')
+const hasActivity = computed(() => (game.value?.daily || []).some((day) => Number(day.minutes) > 0))
+
+const summaryCards = computed(() => game.value ? [
+    { label: t('gameDetail.totalPlaytime'), value: formatMinutes(game.value.lifetime.total_minutes) },
+    { label: t('gameDetail.periodPlaytime'), value: formatMinutes(game.value.summary.total_minutes), hint: periodLabel.value },
+    { label: t('gameDetail.activeDays'), value: game.value.summary.active_days, hint: `${game.value.period.days} ${t('common.days', game.value.period.days)}` },
+    { label: t('gameDetail.average'), value: formatMinutes(game.value.summary.average_minutes_per_active_day) },
+] : [])
+
+const lifetimePlatforms = computed(() => {
+    if (!game.value) return []
+    return [
+        { name: 'Windows', minutes: game.value.lifetime.windows_minutes },
+        { name: 'Steam Deck', minutes: game.value.lifetime.deck_minutes },
+        { name: 'Linux', minutes: game.value.lifetime.linux_minutes },
+        { name: 'macOS', minutes: game.value.lifetime.mac_minutes },
+        { name: 'Unclassified', minutes: game.value.lifetime.unclassified_minutes },
+    ].filter((platform) => platform.minutes > 0)
+})
+
+const axisColor = computed(() => isDark.value ? '#9ca3af' : '#6b7280')
+const splitColor = computed(() => isDark.value ? '#374151' : '#e5e7eb')
+
+const activityChartOption = computed(() => ({
+    backgroundColor: 'transparent',
+    grid: { left: 12, right: 12, top: 20, bottom: 24, containLabel: true },
+    tooltip: {
+        trigger: 'axis',
+        formatter: (items) => {
+            const item = items?.[0]
+            return item ? `${item.axisValue}<br/>${formatMinutes(item.value)}` : ''
+        },
+    },
+    xAxis: {
+        type: 'category',
+        data: (game.value?.daily || []).map((day) => formatShortDate(day.date)),
+        axisLine: { lineStyle: { color: splitColor.value } },
+        axisTick: { show: false },
+        axisLabel: { color: axisColor.value, hideOverlap: true },
+    },
+    yAxis: {
+        type: 'value',
+        axisLabel: { color: axisColor.value, formatter: (value) => formatMinutes(value) },
+        splitLine: { lineStyle: { color: splitColor.value } },
+    },
+    series: [{
+        type: 'bar',
+        data: (game.value?.daily || []).map((day) => day.minutes),
+        barMaxWidth: 34,
+        itemStyle: { color: '#3b82f6', borderRadius: [7, 7, 2, 2] },
+    }],
+}))
+
+const platformChartOption = computed(() => ({
+    backgroundColor: 'transparent',
+    tooltip: { trigger: 'item', formatter: ({ name, value, percent }) => `${name}<br/>${formatMinutes(value)} · ${percent}%` },
+    legend: { bottom: 0, textStyle: { color: axisColor.value } },
+    series: [{
+        type: 'pie',
+        radius: ['48%', '72%'],
+        center: ['50%', '43%'],
+        padAngle: 2,
+        itemStyle: { borderRadius: 6 },
+        label: { show: false },
+        data: (game.value?.platforms || []).map((platform) => ({ name: platform.name, value: platform.minutes })),
+    }],
+}))
+
+const load = async () => {
+    const gameId = route.params.id
+    if (!gameId) return
+
+    loading.value = true
+    error.value = ''
+
+    try {
+        game.value = await getGameDetail(gameId, { from: dateRange.value.from, to: dateRange.value.to })
+        coverError.value = false
+        iconError.value = false
+    } catch (requestError) {
+        error.value = requestError?.response?.data?.message || requestError.message || t('common.error')
+    } finally {
+        loading.value = false
     }
+}
 
-    onMounted(() => {
-        fetchGameData()
-    })
+onMounted(load)
 </script>
