@@ -3,7 +3,6 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\ActivityController;
 use App\Http\Controllers\Api\DashboardController;
-use App\Http\Controllers\Api\GameController;
 use App\Http\Controllers\Api\GameDetailController;
 use App\Http\Controllers\Api\GameLibraryController;
 use App\Http\Controllers\Api\SyncController;
@@ -18,10 +17,6 @@ Route::get('/dashboard/top-games', [DashboardController::class, 'topGames']);
 
 Route::get('/games', GameLibraryController::class);
 Route::get('/games/{game}/detail', GameDetailController::class);
-Route::get('/games/{game}', [GameController::class, 'show']);
-Route::get('/games/{game}/platform-breakdown', [GameController::class, 'platformBreakdown']);
-Route::get('/games/{game}/playtime-history', [GameController::class, 'playtimeHistory']);
-Route::get('/games/{game}/recent-sessions', [GameController::class, 'recentSessions']);
 
 Route::get('/sync/last', [SyncController::class, 'last']);
 Route::post('/sync/trigger', [SyncController::class, 'trigger']);
