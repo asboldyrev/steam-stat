@@ -27,21 +27,11 @@ final class GetGameDetail
         $linuxDesktop = max(0, $linux - $deck);
         $classified = $windows + $linux + $mac;
 
-        $artwork = is_array($game->artwork) ? $game->artwork : [];
-        $detailIcon = $game->artworkUrl('client_icon')
-            ?? $game->artworkUrl('icon')
-            ?? $game->iconUrlLarge();
-        $detailHero = $game->artworkUrl('hero')
-            ?? $game->artworkUrl('header')
-            ?? $game->coverUrl();
-
         return new GameDetailDto(
             id: (int) $game->id,
             appId: (int) $game->app_id,
             name: $game->name,
-            artwork: $artwork,
-            iconUrl: $detailIcon,
-            coverUrl: $detailHero,
+            artwork: is_array($game->artwork) ? $game->artwork : [],
             storeUrl: $game->storeUrl(),
             lastPlayedAt: $latest?->last_played_at?->toIso8601String(),
             lifetime: [
