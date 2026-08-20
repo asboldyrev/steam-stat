@@ -14,10 +14,8 @@ class Game extends Model
         'app_id',
         'name',
         'icon_url',
-        'cover_url',
         'artwork',
         'has_community_visible_stats',
-        'store_metadata_synced_at',
         'artwork_synced_at',
     ];
 
@@ -26,7 +24,6 @@ class Game extends Model
         return [
             'artwork' => 'array',
             'has_community_visible_stats' => 'boolean',
-            'store_metadata_synced_at' => 'immutable_datetime',
             'artwork_synced_at' => 'immutable_datetime',
         ];
     }
@@ -79,11 +76,6 @@ class Game extends Model
         $url = $item['url'] ?? null;
 
         return is_string($url) && $url !== '' ? $url : null;
-    }
-
-    public function coverUrl(): ?string
-    {
-        return $this->artworkUrl('header') ?? $this->cover_url;
     }
 
     public function storeUrl(): string
