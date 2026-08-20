@@ -9,23 +9,10 @@ use Illuminate\Support\Facades\Http;
 
 final class SteamStoreClient
 {
-    public function __construct(private readonly SteamGridDbClient $steamGridDbClient) {}
-
-    public function fetchGameMetadata(int $appId): ?array
-    {
-        $coverUrl = $this->fetchCoverFromAppDetails($appId)
-            ?? $this->steamGridDbClient->fetchWideCover($appId);
-
-        if ($coverUrl === null) {
-            return null;
-        }
-
-        return [
-            'cover_url' => $coverUrl,
-        ];
-    }
-
-    private function fetchCoverFromAppDetails(int $appId): ?string
+    /**
+     * @return array<string, array{url:string,source:string}>
+     */
+    public function fetchArtwork(int $appId): array
     {
         $response = $this->client()->get('https://store.steampowered.com/api/appdetails', [
             'appids' => $appId,
@@ -33,28 +20,54 @@ final class SteamStoreClient
         ]);
 
         if (!$response->successful()) {
-            return null;
+            return [];
         }
 
         $payload = $response->json((string) $appId);
         if (!is_array($payload) || ($payload['success'] ?? false) !== true) {
-            return null;
+            return [];
         }
 
         $data = $payload['data'] ?? null;
         if (!is_array($data)) {
-            return null;
+            return [];
         }
 
-        return $this->firstString($data, [
-            'header_image',
-            'background_raw',
-            'background',
-        ]) ?? $this->firstScreenshot($data)
-            ?? $this->firstString($data, [
-                'capsule_image',
-                'capsule_imagev5',
-            ]);
+        $result = [];
+
+        $header = $this->firstString($data, ['header_image']);
+        if ($header !== null) {
+            $result['header'] = ['url' => $header, 'source' => 'steam-store'];
+        }
+
+        $capsule = $this->firstString($data, ['capsule_image', 'capsule_imagev5']);
+        if ($capsule !== null) {
+            $result['capsule'] = ['url' => $capsule, 'source' => 'steam-store'];
+        }
+
+        // appdetails does not expose the real Steam library hero/logo/client icon fields.
+        // background is still useful as a last-resort hero, but original SteamGridDB
+        // metadata is preferred by the artwork synchronizer when it is available.
+        $hero = $this->firstString($data, ['background_raw', 'background']);
+        if ($hero !== null) {
+            $result['hero'] = ['url' => $hero, 'source' => 'steam-store'];
+        }
+
+        return $result;
+    }
+
+    /**
+     * Kept for compatibility with the old metadata synchronizer while artwork migration
+     * is being rolled out.
+     *
+     * @return array{cover_url:string}|null
+     */
+    public function fetchGameMetadata(int $appId): ?array
+    {
+        $artwork = $this->fetchArtwork($appId);
+        $url = $artwork['header']['url'] ?? null;
+
+        return is_string($url) ? ['cover_url' => $url] : null;
     }
 
     private function client(): PendingRequest
@@ -64,33 +77,15 @@ final class SteamStoreClient
             ->retry(2, 500, throw: false);
     }
 
+    /**
+     * @param list<string> $keys
+     */
     private function firstString(array $data, array $keys): ?string
     {
         foreach ($keys as $key) {
             $value = $data[$key] ?? null;
-            if (is_string($value) && $value !== '') {
+            if (is_string($value) && filter_var($value, FILTER_VALIDATE_URL) !== false) {
                 return $value;
-            }
-        }
-
-        return null;
-    }
-
-    private function firstScreenshot(array $data): ?string
-    {
-        $screenshots = $data['screenshots'] ?? null;
-        if (!is_array($screenshots)) {
-            return null;
-        }
-
-        foreach ($screenshots as $screenshot) {
-            if (!is_array($screenshot)) {
-                continue;
-            }
-
-            $path = $screenshot['path_full'] ?? null;
-            if (is_string($path) && $path !== '') {
-                return $path;
             }
         }
 
