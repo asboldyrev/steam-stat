@@ -77,12 +77,12 @@
                         <div class="min-w-0">
                             <h3 class="truncate text-base font-bold text-gray-950 dark:text-white">{{ game.name }}</h3>
                             <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                {{ t('library.gameCard.lastPlayed') }}: {{ formatLastPlayed(game.last_played) }}
+                                {{ t('library.gameCard.lastPlayed') }}: {{ formatLastPlayed(game.last_played_at) }}
                             </p>
                         </div>
 
                         <span class="shrink-0 rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 dark:bg-blue-950/50 dark:text-blue-300">
-                            {{ game.total_time }}{{ t('common.hours.short') }}
+                            {{ formatPlaytime(game.total_minutes) }}
                         </span>
                     </div>
 
@@ -145,12 +145,18 @@ const sortOptions = computed(() => [
 ])
 
 const totalHoursLabel = computed(() => {
-    const total = games.value.reduce((sum, game) => sum + Number(game.total_time || 0), 0)
-    return t('library.totalHours', { hours: total })
+    const totalMinutes = games.value.reduce((sum, game) => sum + Number(game.total_minutes || 0), 0)
+    return t('library.totalHours', { hours: Math.round(totalMinutes / 60) })
 })
 
 const headerUrl = (game) => assetUrl(game.artwork, 'header')
 const iconUrl = (game) => assetUrl(game.artwork, 'icon')
+
+const formatPlaytime = (minutes) => {
+    const hours = Number(minutes || 0) / 60
+    const value = hours >= 10 ? Math.round(hours) : hours.toFixed(1)
+    return `${value}${t('common.hours.short')}`
+}
 
 const activePlatforms = (game) => {
     const result = []
@@ -161,10 +167,7 @@ const activePlatforms = (game) => {
     return result
 }
 
-const formatLastPlayed = (timestamp) => {
-    if (!timestamp) return '—'
-    return formatDate(new Date(timestamp * 1000), 'D MMM YYYY')
-}
+const formatLastPlayed = (value) => value ? formatDate(value, 'D MMM YYYY') : '—'
 
 const fetchGames = async () => {
     loading.value = true
@@ -175,8 +178,16 @@ const fetchGames = async () => {
         if (searchQuery.value.trim()) params.search = searchQuery.value.trim()
 
         const response = await getGames(params)
-        games.value = (response.games || []).map((game) => ({
+        games.value = (response.games || []).map((game, index) => ({
             ...game,
+            gradient: [
+                'bg-gradient-to-br from-blue-600 to-cyan-500',
+                'bg-gradient-to-br from-green-600 to-emerald-500',
+                'bg-gradient-to-br from-purple-600 to-pink-500',
+                'bg-gradient-to-br from-yellow-600 to-orange-500',
+                'bg-gradient-to-br from-red-600 to-rose-500',
+                'bg-gradient-to-br from-indigo-600 to-violet-500',
+            ][index % 6],
             headerError: false,
             iconError: false,
         }))
