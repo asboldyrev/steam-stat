@@ -2,181 +2,41 @@
     "layout": {
         "appName": "SteamStat",
         "appTagline": "Track your gaming",
-        "menu": {
-            "dashboard": "Dashboard",
-            "activity": "Activity",
-            "gameLibrary": "Game Library"
-        },
+        "menu": {"dashboard": "Dashboard", "activity": "Activity", "gameLibrary": "Game Library"},
         "searchPlaceholder": "Search games...",
-        "lastSync": "Last sync: {time}",
-        "syncButton": "Sync Now",
-        "pageTitle": {
-            "dashboard": "Dashboard",
-            "activity": "Activity",
-            "gameLibrary": "Game Library",
-            "gameDetails": "Game Details",
-            "default": "SteamStat"
-        },
+        "lastSync": "Last sync: {time}", "syncButton": "Sync Now",
+        "pageTitle": {"dashboard": "Dashboard", "activity": "Activity", "gameLibrary": "Game Library", "gameDetails": "Game Details", "default": "SteamStat"},
         "pageSubtitle": "Track and analyze your Steam gaming statistics"
     },
     "dashboard": {
-        "overview": {
-            "trackedActivity": "Tracked activity",
-            "playtime7d": "Playtime over 7 days",
-            "description": "During this period activity was recorded in {games} games across {days} active days.",
-            "activeDays": "Active days",
-            "last7Days": "Over the last 7 days",
-            "vsPrevious": "{value} vs previous period",
-            "noPrevious": "No previous-period data"
-        },
-        "activity7d": {
-            "title": "7-day activity",
-            "subtitle": "Observed Steam counter changes by day",
-            "openActivity": "View details"
-        },
-        "stats": {
-            "totalPlaytime": "Total Playtime",
-            "gamesPlayed": "Games Played",
-            "steamDeck": "Steam Deck",
-            "acrossAllPlatforms": "Across all platforms",
-            "ofTotalTime": "{percent}% of total time"
-        },
-        "platformDistribution": {
-            "title": "Platform Distribution",
-            "windows": "Windows",
-            "steamDeck": "Steam Deck",
-            "linux": "Linux",
-            "macOS": "macOS",
-            "offline": "Offline"
-        },
-        "recentActivity": {
-            "title": "Recent Activity",
-            "viewAll": "View All",
-            "playedOn": "Played {hours}h on {platform} • {time}",
-            "today": "Today",
-            "yesterday": "Yesterday",
-            "daysAgo": "{count} days ago"
-        },
-        "topGames": {
-            "title": "Top Games by Playtime",
-            "columns": {
-                "game": "Game",
-                "totalTime": "Total Time",
-                "lastPlayed": "Last Played"
-            }
-        }
+        "overview": {"trackedActivity": "Tracked activity", "playtime7d": "Playtime over 7 days", "description": "During this period activity was recorded in {games} games across {days} active days.", "activeDays": "Active days", "last7Days": "Over the last 7 days", "vsPrevious": "{value} vs previous period", "noPrevious": "No previous-period data"},
+        "activity7d": {"title": "7-day activity", "subtitle": "Observed Steam counter changes by day", "openActivity": "View details"},
+        "stats": {"totalPlaytime": "Total Playtime", "gamesPlayed": "Games Played", "steamDeck": "Steam Deck", "acrossAllPlatforms": "Across all platforms", "ofTotalTime": "{percent}% of total time"},
+        "platformDistribution": {"title": "Platform Distribution", "windows": "Windows", "steamDeck": "Steam Deck", "linux": "Linux", "macOS": "macOS", "offline": "Offline"},
+        "recentActivity": {"title": "Recent Activity", "viewAll": "View All", "playedOn": "Played {hours}h on {platform} • {time}", "today": "Today", "yesterday": "Yesterday", "daysAgo": "{count} days ago"},
+        "topGames": {"title": "Top Games by Playtime", "columns": {"game": "Game", "totalTime": "Total Time", "lastPlayed": "Last Played"}}
     },
     "activity": {
-        "filters": {
-            "from": "From",
-            "to": "To",
-            "period": "Period",
-            "apply": "Apply"
-        },
-        "summary": {
-            "playtime": "Playtime",
-            "activeDays": "Active days",
-            "games": "Games",
-            "average": "Average",
-            "previous": "Previous period: {value}",
-            "periodDays": "Period: {value} days",
-            "previousGames": "Previous period: {value}",
-            "perActiveDay": "Per active day"
-        },
-        "daily": {
-            "title": "Daily activity",
-            "subtitle": "Playtime during the selected period"
-        },
-        "records": {
-            "title": "Records",
-            "bestDay": "Best day",
-            "bestGame": "Most active game",
-            "longestStreak": "Longest streak",
-            "currentStreak": "Current streak"
-        },
-        "games": {
-            "title": "Games in period"
-        },
-        "platforms": {
-            "title": "Platforms"
-        },
-        "heatmap": {
-            "title": "Activity heatmap",
-            "subtitle": "Daily intensity"
-        },
-        "approximate": "Hourly statistics are approximate"
+        "filters": {"from": "From", "to": "To", "period": "Period", "apply": "Apply"},
+        "summary": {"playtime": "Playtime", "activeDays": "Active days", "games": "Games", "average": "Average", "previous": "Previous period: {value}", "periodDays": "Period: {value} days", "previousGames": "Previous period: {value}", "perActiveDay": "Per active day"},
+        "daily": {"title": "Daily activity", "subtitle": "Playtime during the selected period"},
+        "records": {"title": "Records", "bestDay": "Best day", "bestGame": "Most active game", "longestStreak": "Longest streak", "currentStreak": "Current streak"},
+        "games": {"title": "Games in period"}, "platforms": {"title": "Platforms"}, "heatmap": {"title": "Activity heatmap", "subtitle": "Daily intensity"}, "approximate": "Hourly statistics are approximate"
     },
     "library": {
-        "title": "Your Game Library",
-        "overview": {
-            "eyebrow": "Library"
-        },
-        "controls": {
-            "search": "Search",
-            "sort": "Sort"
-        },
-        "totalHours": "{hours} total hours",
-        "filterPlaceholder": "Filter by game name...",
-        "sortBy": {
-            "playtime": "By playtime",
-            "name": "By name",
-            "lastPlayed": "By last played"
-        },
-        "platformFilters": {
-            "all": "All Platforms",
-            "windows": "Windows",
-            "steamDeck": "Steam Deck",
-            "linux": "Linux"
-        },
-        "gameCard": {
-            "totalTime": "Total Time",
-            "lastPlayed": "Last Played",
-            "platforms": "Platforms",
-            "viewDetails": "View Details",
-            "platformWindows": "Windows",
-            "platformDeck": "SteamDeck",
-            "platformLinux": "Linux"
-        }
+        "title": "Your Game Library", "overview": {"eyebrow": "Library"}, "controls": {"search": "Search", "sort": "Sort"}, "totalHours": "{hours} total hours", "filterPlaceholder": "Filter by game name...",
+        "sortBy": {"playtime": "By playtime", "name": "By name", "last_played": "By last played", "lastPlayed": "By last played"},
+        "platformFilters": {"all": "All Platforms", "windows": "Windows", "steamDeck": "Steam Deck", "linux": "Linux"},
+        "gameCard": {"totalTime": "Total Time", "lastPlayed": "Last Played", "platforms": "Platforms", "viewDetails": "View Details", "platformWindows": "Windows", "platformDeck": "SteamDeck", "platformLinux": "Linux"}
     },
     "gameDetail": {
-        "totalPlaytime": "Total Playtime",
-        "lastPlayed": "Last Played",
-        "today": "Today",
-        "platformUsage": "Platform Usage",
-        "platformWindows": "Windows",
-        "platformSteamDeck": "Steam Deck",
-        "platformLinux": "Linux",
-        "playtimeHistory": "Playtime history"
+        "totalPlaytime": "Total playtime", "lastPlayed": "Last played", "platformUsage": "Platforms in period", "playtimeHistory": "Daily activity",
+        "period": "Period", "apply": "Apply", "openSteam": "Open in Steam", "periodPlaytime": "In period", "activeDays": "Active days", "average": "Average per active day",
+        "lifetimePlatforms": "Lifetime", "diagnostics": "Diagnostics", "disconnected": "Disconnected minutes", "noActivity": "No activity in the selected period"
     },
     "common": {
-        "hours": {
-            "short": " h",
-            "full": "hour|hours"
-        },
-        "years": "year|years",
-        "months": "month|months",
-        "days": "day|days",
-        "percent": "{percent}%",
-        "error": "Something went wrong",
-        "retry": "Retry",
-        "save": "Save",
-        "cancel": "Cancel",
-        "delete": "Delete",
-        "edit": "Edit",
-        "confirm": "Confirm",
-        "yes": "Yes",
-        "no": "No",
-        "theme": {
-            "light": "Light",
-            "dark": "Dark",
-            "system": "System"
-        },
-        "language": {
-            "en": "English",
-            "ru": "Русский"
-        },
-        "loading": "Loading...",
-        "noData": "No data",
-        "gameCount": "game|games"
+        "hours": {"short": " h", "full": "hour|hours"}, "years": "year|years", "months": "month|months", "days": "day|days", "percent": "{percent}%",
+        "error": "Something went wrong", "retry": "Retry", "save": "Save", "cancel": "Cancel", "delete": "Delete", "edit": "Edit", "confirm": "Confirm", "yes": "Yes", "no": "No",
+        "theme": {"light": "Light", "dark": "Dark", "system": "System"}, "language": {"en": "English", "ru": "Русский"}, "loading": "Loading...", "noData": "No data", "gameCount": "game|games"
     }
 }
