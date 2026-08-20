@@ -66,9 +66,6 @@ final class SyncGameArtwork
 
         $game->forceFill([
             'artwork' => $artwork,
-            // Keep the old field populated during the transition so older API code does
-            // not break. It can be removed after the artwork migration is verified.
-            'cover_url' => $artwork['header']['url'] ?? $game->cover_url,
             'artwork_synced_at' => CarbonImmutable::now('UTC'),
         ])->save();
 
