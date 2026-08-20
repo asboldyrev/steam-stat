@@ -9,18 +9,122 @@ use Illuminate\Support\Facades\Http;
 
 final class SteamGridDbClient
 {
+    /**
+     * @return array<string, array{url:string,source:string}|null>
+     */
+    public function fetchArtwork(int $appId): array
+    {
+        $original = $this->fetchOriginalSteamAssets($appId);
+
+        return [
+            'header' => $original['header'] ?? $this->fetchAsset('grids', $appId, [
+                'dimensions' => '920x430,460x215',
+                'types' => 'static',
+            ]),
+            'capsule' => $original['capsule'] ?? $this->fetchAsset('grids', $appId, [
+                'dimensions' => '600x900,660x930',
+                'types' => 'static',
+            ]),
+            'hero' => $original['hero'] ?? $this->fetchAsset('heroes', $appId, [
+                'types' => 'static',
+            ]),
+            'logo' => $original['logo'] ?? $this->fetchAsset('logos', $appId, [
+                'types' => 'static',
+            ]),
+            'icon' => $original['icon'] ?? $this->fetchAsset('icons', $appId, [
+                'types' => 'static',
+            ]),
+            'client_icon' => $original['client_icon'] ?? null,
+        ];
+    }
+
     public function fetchWideCover(int $appId): ?string
     {
-        $apiKey = (string) config('steam-stat.steamgriddb.api_key', '');
+        return $this->fetchArtwork($appId)['header']['url'] ?? null;
+    }
+
+    /**
+     * SteamGridDB exposes the same metadata used by its “View Original Steam Assets” UI
+     * through a public game endpoint. This endpoint is not part of the documented v2 API,
+     * so it is isolated here and every field is treated as optional.
+     *
+     * @return array<string, array{url:string,source:string}>
+     */
+    private function fetchOriginalSteamAssets(int $appId): array
+    {
+        $gameId = $this->resolveGameId($appId);
+        if ($gameId === null) {
+            return [];
+        }
+
+        $response = Http::acceptJson()
+            ->withHeaders(['Referer' => 'https://www.steamgriddb.com/'])
+            ->timeout(10)
+            ->retry(1, 500, throw: false)
+            ->get("https://www.steamgriddb.com/api/public/game/{$gameId}");
+
+        if (!$response->successful()) {
+            return [];
+        }
+
+        $metadata = $response->json('data.platforms.steam.metadata');
+        if (!is_array($metadata)) {
+            return [];
+        }
+
+        $aliases = [
+            'header' => ['header', 'header_image'],
+            'capsule' => ['library_600x900_2x', 'library_600x900', 'capsule', 'capsule_image'],
+            'hero' => ['library_hero', 'hero'],
+            'logo' => ['logo', 'logo_2x'],
+            'icon' => ['icon'],
+            'client_icon' => ['clienticon', 'client_icon'],
+        ];
+
+        $result = [];
+        foreach ($aliases as $type => $keys) {
+            $url = $this->firstUrl($metadata, $keys);
+            if ($url !== null) {
+                $result[$type] = ['url' => $url, 'source' => 'steam-original'];
+            }
+        }
+
+        return $result;
+    }
+
+    private function resolveGameId(int $appId): ?int
+    {
+        $apiKey = $this->apiKey();
+        if ($apiKey === '') {
+            return null;
+        }
+
+        $response = $this->client($apiKey)
+            ->get(sprintf('https://www.steamgriddb.com/api/v2/games/steam/%d', $appId));
+
+        if (!$response->successful()) {
+            return null;
+        }
+
+        $id = $response->json('data.id');
+
+        return is_numeric($id) ? (int) $id : null;
+    }
+
+    /**
+     * @param array<string,string> $params
+     * @return array{url:string,source:string}|null
+     */
+    private function fetchAsset(string $type, int $appId, array $params = []): ?array
+    {
+        $apiKey = $this->apiKey();
         if ($apiKey === '') {
             return null;
         }
 
         $response = $this->client($apiKey)->get(
-            sprintf('https://www.steamgriddb.com/api/v2/grids/steam/%d', $appId),
-            [
-                'dimensions' => '920x430,460x215',
-                'types' => 'static',
+            sprintf('https://www.steamgriddb.com/api/v2/%s/steam/%d', $type, $appId),
+            $params + [
                 'nsfw' => 'false',
                 'humor' => 'false',
             ],
@@ -42,7 +146,6 @@ final class SteamGridDbClient
 
             $leftPixels = ((int) ($left['width'] ?? 0)) * ((int) ($left['height'] ?? 0));
             $rightPixels = ((int) ($right['width'] ?? 0)) * ((int) ($right['height'] ?? 0));
-
             if ($leftPixels !== $rightPixels) {
                 return $rightPixels <=> $leftPixels;
             }
@@ -54,21 +157,37 @@ final class SteamGridDbClient
         });
 
         foreach ($items as $item) {
-            if (!is_array($item)) {
-                continue;
-            }
-
-            if (($item['nsfw'] ?? false) === true || ($item['humor'] ?? false) === true) {
+            if (!is_array($item) || ($item['nsfw'] ?? false) === true || ($item['humor'] ?? false) === true) {
                 continue;
             }
 
             $url = $item['url'] ?? null;
             if (is_string($url) && filter_var($url, FILTER_VALIDATE_URL) !== false) {
-                return $url;
+                return ['url' => $url, 'source' => 'steamgriddb'];
             }
         }
 
         return null;
+    }
+
+    /**
+     * @param list<string> $keys
+     */
+    private function firstUrl(array $data, array $keys): ?string
+    {
+        foreach ($keys as $key) {
+            $value = $data[$key] ?? null;
+            if (is_string($value) && filter_var($value, FILTER_VALIDATE_URL) !== false) {
+                return $value;
+            }
+        }
+
+        return null;
+    }
+
+    private function apiKey(): string
+    {
+        return (string) config('steam-stat.steamgriddb.api_key', '');
     }
 
     private function client(string $apiKey): PendingRequest
